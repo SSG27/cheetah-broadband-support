@@ -5,7 +5,7 @@ A customer-support chatbot prototype for Cheetah Broadband, a fictional UK inter
 ## Requirements
 
 - Node.js 20.9 or newer
-- pnpm 9 or newer
+- pnpm 11.7 or newer
 
 ## Run locally
 

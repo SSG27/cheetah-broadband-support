@@ -10,6 +10,8 @@ before(async () => {
 });
 
 after(async () => {
+  await prisma.message.deleteMany();
+  await prisma.conversation.deleteMany();
   await prisma.$disconnect();
 });
 
