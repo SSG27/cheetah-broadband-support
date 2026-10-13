@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Message = { id: string; role: "user" | "assistant"; content: string; createdAt: string };
 type Conversation = { id: string; title: string; updatedAt: string; messages: Message[] };
@@ -28,9 +28,9 @@ export default function HomePage() {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
   const [aiConnected, setAiConnected] = useState<boolean | null>(null);
-  const messagesEnd = useRef<HTMLDivElement>(null);
+  const messagesContainer = useRef<HTMLDivElement>(null);
   const activeConversation = conversations.find((item) => item.id === activeId);
-  const messages = activeConversation?.messages ?? [];
+  const messages = useMemo(() => activeConversation?.messages ?? [], [activeConversation?.messages]);
 
   const loadConversations = useCallback(async () => {
     try {
@@ -56,12 +56,14 @@ export default function HomePage() {
   useEffect(() => {
     void loadConversations();
     fetch("/api/integrations/openai")
-      .then((response) => setAiConnected(response.ok))
+      .then((response) => response.json())
+      .then((data: { status?: string }) => setAiConnected(data.status === "connected"))
       .catch(() => setAiConnected(false));
   }, [loadConversations]);
 
   useEffect(() => {
-    messagesEnd.current?.scrollIntoView({ behavior: "smooth" });
+    const container = messagesContainer.current;
+    if (container) container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
   async function newConversation() {
@@ -144,7 +146,7 @@ export default function HomePage() {
             <div className="chat-heading"><div><div className="eyebrow"><span className="pulse-dot" /> YOUR SUPPORT, REIMAGINED</div><h1>Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"} <span>👋</span></h1><p>How can we make your day a little faster?</p></div><button className="new-chat-button" onClick={() => void newConversation()}><span>＋</span> New chat</button></div>
             <div className="chat-card">
               <div className="chat-card-header"><div className="assistant-id"><ChatAvatar small /><div><strong>Cheetah Assistant</strong><span><i className="green-dot" /> Here to help, anytime</span></div></div><div className="powered">{aiConnected ? <><span className="provider-dot" /> AI POWERED</> : <><span className="local-dot" /> SUPPORT MODE</>}</div></div>
-              <div className="messages-area">
+              <div className="messages-area" ref={messagesContainer}>
                 {!ready && <div className="loading-state"><span className="spinner" /> Getting your support space ready…</div>}
                 {ready && messages.length === 0 && <div className="welcome-message"><ChatAvatar /><div className="welcome-copy"><span className="message-time">CHEETAH ASSISTANT · JUST NOW</span><div className="assistant-bubble">Hi there! I’m your Cheetah Broadband assistant. I can help with your connection, Wi-Fi, speed and billing questions. What can I help you with today?</div></div></div>}
                 {messages.map((message) => <div key={message.id} className={`message-row ${message.role === "user" ? "from-user" : "from-assistant"}`}>
@@ -153,7 +155,6 @@ export default function HomePage() {
                   {message.role === "user" && <div className="user-avatar">C</div>}
                 </div>)}
                 {loading && <div className="message-row from-assistant"><ChatAvatar /><div className="typing-indicator"><span /><span /><span /></div></div>}
-                <div ref={messagesEnd} />
               </div>
               {messages.length === 0 && ready && <div className="suggestion-area"><span className="suggestion-label">A GOOD PLACE TO START</span><div className="suggestion-grid">{suggestions.map((item) => <button key={item.title} className="suggestion-card" onClick={() => void sendMessage(undefined, item.prompt)}><span className="suggestion-icon">{item.icon}</span><span>{item.title}</span><span className="suggestion-arrow">↗</span></button>)}</div></div>}
               {error && <div className="error-banner">{error}</div>}
@@ -164,13 +165,13 @@ export default function HomePage() {
           </section>
 
           <aside className="info-column">
-            <div className="connection-card"><div className="card-topline"><span className="card-icon">⌁</span><span className="live-pill"><i /> LIVE</span></div><span className="card-eyebrow">YOUR CONNECTION</span><h2>Looking good.</h2><p>Your area is running smoothly. No issues reported nearby.</p><div className="connection-visual"><div className="signal-bars"><i /><i /><i /><i /></div><span>All systems operational</span></div><button className="text-link" onClick={() => window.open("https://www.checnet.co.uk/", "_blank", "noopener,noreferrer")}>View network status <span>↗</span></button></div>
+            <div className="connection-card"><div className="card-topline"><span className="card-icon">⌁</span><span className="live-pill"><i /> DEMO</span></div><span className="card-eyebrow">NETWORK STATUS</span><h2>Looking good.</h2><p>Sample service status for this demonstration. No live network systems are connected.</p><div className="connection-visual"><div className="signal-bars"><i /><i /><i /><i /></div><span>Demo status · all systems operational</span></div><span className="text-link">Service status overview</span></div>
             <div className="quick-help-card"><div className="quick-help-header"><span className="headset-icon">◉</span><div><strong>Prefer a human?</strong><span>We’re here for you, too.</span></div></div><div className="divider" /><div className="contact-row"><span>Call our team</span><a href="tel:08000142025">0800 014 2025</a></div><div className="contact-row"><span>Opening hours</span><strong>Mon–Sat, 8am–8pm</strong></div><button className="contact-button" onClick={() => { setDraft("I’d like to speak with a support specialist."); }}>Get more support <span>→</span></button></div>
             <div className="trust-note"><span>✳</span><p><strong>We’ve got your back.</strong><br />Real people, real fast. Our UK-based team is always just a call away.</p></div>
             <div className="data-note"><span className="data-shield">◈</span> Your data stays yours. <a href="#privacy">Privacy promise</a></div>
           </aside>
         </div>
-        <footer className="page-footer"><span>© 2025 Cheetah Broadband</span><div><a href="#terms">Terms</a><a href="#privacy">Privacy</a><a href="#status">Network status</a></div><span className="footer-right"><i className="green-dot" /> All systems operational</span></footer>
+        <footer className="page-footer"><span>© {new Date().getFullYear()} Cheetah Broadband</span><div><a href="#terms">Terms</a><a href="#privacy">Privacy</a><a href="#status">Network status</a></div><span className="footer-right"><i className="green-dot" /> All systems operational</span></footer>
       </section>
     </main>
   );

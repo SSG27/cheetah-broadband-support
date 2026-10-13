@@ -17,7 +17,7 @@ export async function GET() {
 
 export async function POST() {
   try {
-    const conversation = await prisma.conversation.create({ data: {} });
+    const conversation = await prisma.conversation.create({ data: {}, include: { messages: true } });
     console.info("[api/conversations] created", { conversationId: conversation.id });
     return NextResponse.json(conversation, { status: 201 });
   } catch (error) {

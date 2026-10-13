@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { OpenAIProvider } from "@/lib/ai-provider";
 
 export async function GET() {
+  if (!process.env.OPENAI_API_KEY) {
+    return NextResponse.json({ status: "unconfigured", provider: "OpenAI" });
+  }
+
   try {
     await new OpenAIProvider().checkConnection();
     return NextResponse.json({ status: "connected", provider: "OpenAI" });

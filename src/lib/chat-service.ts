@@ -12,12 +12,15 @@ export class ChatService {
     const userMessage = await prisma.message.create({
       data: { role: "user", content, conversationId },
     });
-    if (conversation.title === "New conversation") {
-      await prisma.conversation.update({
-        where: { id: conversationId },
-        data: { title: content.slice(0, 42) + (content.length > 42 ? "…" : "") },
-      });
-    }
+    await prisma.conversation.update({
+      where: { id: conversationId },
+      data: {
+        updatedAt: new Date(),
+        ...(conversation.title === "New conversation"
+          ? { title: content.slice(0, 42) + (content.length > 42 ? "…" : "") }
+          : {}),
+      },
+    });
 
     const recent = await prisma.message.findMany({
       where: { conversationId },
@@ -30,12 +33,16 @@ export class ChatService {
     }));
 
     let answer: string;
-    let source: "ai" | "fallback" = "ai";
-    try {
-      answer = await new OpenAIProvider().reply(history);
-    } catch (error) {
-      source = "fallback";
-      console.warn("[chat] AI provider unavailable; using local support response", error);
+    let source: "ai" | "fallback" = "fallback";
+    if (process.env.OPENAI_API_KEY) {
+      try {
+        answer = await new OpenAIProvider().reply(history);
+        source = "ai";
+      } catch (error) {
+        console.warn("[chat] AI provider unavailable; using local support response", error);
+        answer = this.fallback.reply(content);
+      }
+    } else {
       answer = this.fallback.reply(content);
     }
 
