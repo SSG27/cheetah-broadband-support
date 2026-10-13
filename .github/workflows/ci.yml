@@ -20,7 +20,7 @@ jobs:
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 11.7.0
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Generate Prisma client
@@ -28,14 +28,14 @@ jobs:
       - name: Apply database schema
         run: pnpm db:push
         env:
-          DATABASE_URL: file:./prisma/ci.db
+          DATABASE_URL: file:./ci.db
       - name: Run integration tests
         run: pnpm test:integration
         env:
-          DATABASE_URL: file:./prisma/ci.db
+          DATABASE_URL: file:./ci.db
       - name: Lint
         run: pnpm lint
       - name: Build application
         run: pnpm build
         env:
-          DATABASE_URL: file:./prisma/ci.db
+          DATABASE_URL: file:./ci.db
