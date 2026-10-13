@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Generate Prisma client
+        run: pnpm db:generate
+      - name: Apply database schema
+        run: pnpm db:push
+        env:
+          DATABASE_URL: file:./prisma/ci.db
+      - name: Run integration tests
+        run: pnpm test:integration
+        env:
+          DATABASE_URL: file:./prisma/ci.db
+      - name: Lint
+        run: pnpm lint
+      - name: Build application
+        run: pnpm build
+        env:
+          DATABASE_URL: file:./prisma/ci.db

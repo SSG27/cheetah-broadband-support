@@ -1,0 +1,31 @@
+import { NextRequest, NextResponse } from "next/server";
+import { ChatService } from "@/lib/chat-service";
+
+export async function POST(request: NextRequest) {
+  try {
+    const body: unknown = await request.json();
+    if (
+      !body ||
+      typeof body !== "object" ||
+      !("conversationId" in body) ||
+      typeof body.conversationId !== "string" ||
+      !("message" in body) ||
+      typeof body.message !== "string"
+    ) {
+      return NextResponse.json({ error: "A conversation and message are required" }, { status: 400 });
+    }
+    const content = body.message.trim();
+    if (!content || content.length > 1000) {
+      return NextResponse.json({ error: "Message must be between 1 and 1000 characters" }, { status: 400 });
+    }
+
+    const result = await new ChatService().send(body.conversationId, content);
+    return NextResponse.json(result);
+  } catch (error) {
+    if (error instanceof Error && error.message === "Conversation not found") {
+      return NextResponse.json({ error: error.message }, { status: 404 });
+    }
+    console.error("[api/chat] request failed", error);
+    return NextResponse.json({ error: "We couldn’t process that message. Please try again." }, { status: 500 });
+  }
+}
