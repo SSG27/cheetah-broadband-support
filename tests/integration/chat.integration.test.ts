@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { prisma } from "../../src/lib/prisma";
-import { ChatService } from "../../src/lib/chat-service";
-import { OpenAIProvider } from "../../src/lib/ai-provider";
+import { sendMessage } from "../../src/lib/chat-service";
+import { AIProviderOptions, ChatTurn, checkAIConnection, openAIReply } from "../../src/lib/ai-provider";
 
 before(async () => {
   await prisma.message.deleteMany();
@@ -17,7 +17,7 @@ after(async () => {
 
 test("chat service persists a customer and support reply through Prisma", async () => {
   const conversation = await prisma.conversation.create({ data: {} });
-  const result = await new ChatService().send(conversation.id, "My Wi-Fi is slow");
+  const result = await sendMessage(conversation.id, "My Wi-Fi is slow");
 
   assert.equal(result.userMessage.content, "My Wi-Fi is slow");
   assert.equal(result.assistantMessage.role, "assistant");
@@ -39,9 +39,14 @@ test("AI integration sends authenticated requests and parses provider replies", 
       headers: { "Content-Type": "application/json" },
     });
   };
+  const history: ChatTurn[] = [{ role: "user", content: "My Wi-Fi is slow" }]
+  const options: AIProviderOptions = {
+    apiKey: "test-key",
+    model: "test-model",
+    fetcher: fakeFetch,
+  };
 
-  const provider = new OpenAIProvider("test-key", "test-model", fakeFetch);
-  const reply = await provider.reply([{ role: "user", content: "My Wi-Fi is slow" }]);
+  const reply = await openAIReply(history, options);
   assert.equal(reply, "Try restarting your router.");
   assert.equal(target, "https://api.openai.com/v1/chat/completions");
   assert.equal(authorization, "Bearer test-key");
@@ -50,5 +55,5 @@ test("AI integration sends authenticated requests and parses provider replies", 
 test("configured credentials can reach the real OpenAI models endpoint", {
   skip: !process.env.OPENAI_API_KEY ? "Set OPENAI_API_KEY to run the live third-party connection check" : false,
 }, async () => {
-  assert.equal(await new OpenAIProvider().checkConnection(), true);
+  assert.equal(await checkAIConnection(), true);
 });
