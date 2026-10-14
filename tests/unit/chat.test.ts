@@ -27,10 +27,7 @@ describe("ChatService", () => {
   it("stores the user message and assistant reply in the same conversation", async () => {
     const conversation = await prisma.conversation.create({ data: {} });
 
-    const result = await sendMessage(
-      conversation.id,
-      "My Wi-Fi is slow",
-    );
+    const result = await sendMessage(conversation.id, "My Wi-Fi is slow");
 
     expect(result.userMessage.content).toBe("My Wi-Fi is slow");
     expect(result.assistantMessage.role).toBe("assistant");
@@ -62,9 +59,10 @@ describe("OpenAIProvider", () => {
       model: "test-model",
       fetcher: fakeFetch as typeof fetch,
     };
-    const reply = await openAIReply([
-      { role: "user", content: "My Wi-Fi is slow" },
-    ], options);
+    const reply = await openAIReply(
+      [{ role: "user", content: "My Wi-Fi is slow" }],
+      options,
+    );
 
     expect(reply).toBe("Try restarting your router.");
     expect(fakeFetch).toHaveBeenCalledTimes(1);
