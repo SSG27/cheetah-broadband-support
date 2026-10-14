@@ -20,6 +20,7 @@ type Conversation = {
   title: string;
   updatedAt: string;
   messages: Message[];
+  humanRequested?: boolean;
 };
 
 const suggestions = [
@@ -80,6 +81,9 @@ export default function HomePage() {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
   const [aiConnected, setAiConnected] = useState<boolean | null>(null);
+  const [humanRequestState, setHumanRequestState] = useState<
+    "idle" | "pending" | "requested" | "error"
+  >("idle");
   const messagesContainer = useRef<HTMLDivElement>(null);
   const activeConversation = conversations.find((item) => item.id === activeId);
   const messages = useMemo(
@@ -125,6 +129,38 @@ export default function HomePage() {
     if (container)
       container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
+
+  useEffect(() => {
+    setHumanRequestState(
+      activeConversation?.humanRequested ? "requested" : "idle",
+    );
+  }, [activeId, activeConversation?.humanRequested]);
+
+  async function requestHumanSupport() {
+    if (
+      !activeId ||
+      humanRequestState === "pending" ||
+      humanRequestState === "requested"
+    )
+      return;
+    setHumanRequestState("pending");
+    try {
+      const response = await fetch(
+        `/api/conversations/${activeId}/human-request`,
+        { method: "POST" },
+      );
+      if (!response.ok) throw new Error("Request failed");
+      setConversations((items) =>
+        items.map((item) =>
+          item.id === activeId ? { ...item, humanRequested: true } : item,
+        ),
+      );
+      setHumanRequestState("requested");
+    } catch (cause) {
+      console.error("[ui] human support request failed", cause);
+      setHumanRequestState("error");
+    }
+  }
 
   async function newConversation() {
     setError("");
@@ -237,6 +273,9 @@ export default function HomePage() {
         <button className="nav-item selected">
           <span className="nav-icon">◌</span> Customer care
         </button>
+        <a className="nav-item" href="/admin">
+          <span className="nav-icon">▤</span> Support inbox
+        </a>
         <button className="nav-item" onClick={() => void newConversation()}>
           <span className="nav-icon">▤</span> My conversations
         </button>
@@ -513,6 +552,45 @@ export default function HomePage() {
               >
                 Get more support <span>→</span>
               </button>
+            </div>
+            <div className="quick-help-card">
+              <div className="quick-help-header">
+                <span className="headset-icon">◉</span>
+                <div>
+                  <strong>Prefer a human?</strong>
+                  <span>We’re here for you, too.</span>
+                </div>
+              </div>
+              <div className="divider" />
+              <div className="contact-row">
+                <span>Call our team</span>
+                <a href="tel:08000142025">0800 014 2025</a>
+              </div>
+              <div className="contact-row">
+                <span>Opening hours</span>
+                <strong>Mon–Sat, 8am–8pm</strong>
+              </div>
+              <button
+                className={`contact-button${humanRequestState === "requested" ? " requested" : ""}`}
+                onClick={() => void requestHumanSupport()}
+                disabled={
+                  !ready ||
+                  humanRequestState === "pending" ||
+                  humanRequestState === "requested"
+                }
+              >
+                {humanRequestState === "requested"
+                  ? "Human support requested"
+                  : humanRequestState === "pending"
+                    ? "Sending request…"
+                    : "Request a human"}
+                <span>{humanRequestState === "requested" ? "✓" : "→"}</span>
+              </button>
+              {humanRequestState === "error" && (
+                <div className="human-request-error">
+                  Couldn’t send your request. Please try again.
+                </div>
+              )}
             </div>
             <div className="trust-note">
               <span>✳</span>
