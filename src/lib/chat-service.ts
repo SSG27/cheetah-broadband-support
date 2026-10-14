@@ -54,3 +54,9 @@ export async function sendMessage(conversationId: string, content: string) {
   console.info("[chat] message handled", { conversationId, source });
   return { userMessage, assistantMessage, source };
 }
+
+export class ChatService {
+  async send(conversationId: string, content: string) {
+    return sendMessage(conversationId, content);
+  }
+}
