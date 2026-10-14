@@ -1,9 +1,11 @@
 packages:
   - .
-
 allowBuilds:
   "@prisma/client": true
   "@prisma/engines": true
   esbuild: true
   prisma: true
   unrs-resolver: false
+overrides:
+  "@types/react": 19.3.0
+  "@types/react-dom": 19.3.0
