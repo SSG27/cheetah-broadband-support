@@ -20,6 +20,7 @@ type Conversation = {
   title: string;
   updatedAt: string;
   messages: Message[];
+  humanRequested?: boolean;
 };
 
 const suggestions = [
