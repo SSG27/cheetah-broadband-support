@@ -12,12 +12,13 @@ export async function openAIReply(
 ): Promise<string> {
   const apiKey = options.apiKey ?? process.env.OPENAI_API_KEY;
   const model = options.model ?? process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+  const fetcher = options.fetcher ?? fetch;
 
   if (!apiKey) {
     throw new Error("AI provider is not configured");
   }
 
-  const response = await fetch(
+  const response = await fetcher(
     "https://api.openai.com/v1/chat/completions",
     {
       method: "POST",
