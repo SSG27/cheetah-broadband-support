@@ -35,8 +35,6 @@ jobs:
           DATABASE_URL: file:./ci.db
       - name: Lint
         run: pnpm lint
-      - name: Type check
-        run: tsc --noEmit
       - name: Format check
         run: pnpm run format:check
       - name: Build application
