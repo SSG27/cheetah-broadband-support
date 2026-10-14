@@ -12,7 +12,10 @@ export async function GET() {
   } catch (error) {
     console.error("[api/integrations/openai] connection check failed", error);
     return NextResponse.json(
-      { status: "unavailable", message: error instanceof Error ? error.message : "Connection failed" },
+      {
+        status: "unavailable",
+        message: error instanceof Error ? error.message : "Connection failed",
+      },
       { status: 503 },
     );
   }
