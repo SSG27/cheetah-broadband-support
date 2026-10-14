@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ChatService } from "@/lib/chat-service";
+import { sendMessage } from "@/lib/chat-service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Message must be between 1 and 1000 characters" }, { status: 400 });
     }
 
-    const result = await new ChatService().send(body.conversationId, content);
+    const result = await sendMessage(body.conversationId, content);
     return NextResponse.json(result);
   } catch (error) {
     if (error instanceof Error && error.message === "Conversation not found") {

@@ -1,6 +1,6 @@
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 
-type AIProviderOptions = {
+export type AIProviderOptions = {
   apiKey?: string;
   model?: string;
   fetcher?: typeof fetch;
