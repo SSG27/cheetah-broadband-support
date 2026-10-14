@@ -545,32 +545,6 @@ export default function HomePage() {
                 <strong>Mon–Sat, 8am–8pm</strong>
               </div>
               <button
-                className="contact-button"
-                onClick={() => {
-                  setDraft("I’d like to speak with a support specialist.");
-                }}
-              >
-                Get more support <span>→</span>
-              </button>
-            </div>
-            <div className="quick-help-card">
-              <div className="quick-help-header">
-                <span className="headset-icon">◉</span>
-                <div>
-                  <strong>Prefer a human?</strong>
-                  <span>We’re here for you, too.</span>
-                </div>
-              </div>
-              <div className="divider" />
-              <div className="contact-row">
-                <span>Call our team</span>
-                <a href="tel:08000142025">0800 014 2025</a>
-              </div>
-              <div className="contact-row">
-                <span>Opening hours</span>
-                <strong>Mon–Sat, 8am–8pm</strong>
-              </div>
-              <button
                 className={`contact-button${humanRequestState === "requested" ? " requested" : ""}`}
                 onClick={() => void requestHumanSupport()}
                 disabled={
