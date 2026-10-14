@@ -18,7 +18,7 @@ import {
   Gauge,
   WifiIcon,
   GlobeOff,
-  PoundSterling
+  PoundSterling,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -58,7 +58,7 @@ const suggestions = [
     title: "Improve my Wi-Fi",
     prompt: "How can I improve my Wi-Fi signal at home?",
   },
-  { 
+  {
     icon: Gauge,
     title: "Check my speed",
     prompt: "My broadband speed feels slower than usual. What should I try?",
@@ -543,7 +543,7 @@ export default function HomePage() {
                         className="suggestion-card"
                         onClick={() => void sendMessage(undefined, item.prompt)}
                       >
-                        <item.icon/>
+                        <item.icon />
                         <span>{item.title}</span>
                         <span className="suggestion-arrow">↗</span>
                       </Button>
