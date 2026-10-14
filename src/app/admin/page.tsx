@@ -2,6 +2,25 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowLeft,
+  FlagOff,
+  Inbox,
+  MessageSquareText,
+  MoreHorizontal,
+  RefreshCw,
+  Search,
+  UserRound,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { BrandMark } from "@/components/brand-mark";
 
 type Message = {
   id: string;
@@ -48,6 +67,8 @@ export default function AdminPage() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [priorityUpdatingId, setPriorityUpdatingId] = useState("");
+  const [priorityError, setPriorityError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -103,22 +124,55 @@ export default function AdminPage() {
     (conversation) => conversation.humanRequested,
   ).length;
 
+  async function clearPriority(id: string) {
+    setPriorityUpdatingId(id);
+    setPriorityError("");
+    try {
+      const response = await fetch(`/api/conversations/${id}/priority`, {
+        method: "PATCH",
+      });
+      if (!response.ok) throw new Error("Unable to clear priority");
+      const updated = (await response.json()) as {
+        humanRequested: boolean;
+        updatedAt: string;
+      };
+      setConversations((items) =>
+        items.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                humanRequested: updated.humanRequested,
+                updatedAt: updated.updatedAt,
+              }
+            : item,
+        ),
+      );
+    } catch (cause) {
+      console.error("[admin] failed to clear conversation priority", cause);
+      setPriorityError("Couldn’t clear priority. Please try again.");
+    } finally {
+      setPriorityUpdatingId("");
+    }
+  }
+
   return (
     <main className="admin-shell">
       <aside className="admin-sidebar">
-        <Link className="admin-brand" href="/">
-          <span className="admin-brand-mark">c</span>
-          <span>
-            <strong>cheetah</strong>
-            <small>BROADBAND</small>
-          </span>
+        <Link href="/" aria-label="Cheetah Broadband home">
+          <div className="admin-brand">
+            <BrandMark />
+            <div>
+              <strong>cheetah</strong>
+              <span>BROADBAND</span>
+            </div>
+          </div>
         </Link>
         <div className="admin-nav-label">WORKSPACE</div>
         <Link className="admin-nav-link" href="/">
-          <span>⌂</span> Customer chat
+          <UserRound aria-hidden="true" /> Customer chat
         </Link>
         <Link className="admin-nav-link active" href="/admin">
-          <span>▤</span> Conversations
+          <Inbox aria-hidden="true" /> Conversations
         </Link>
         <div className="admin-sidebar-bottom">
           <span className="admin-online-dot" /> Support workspace{" "}
@@ -132,7 +186,9 @@ export default function AdminPage() {
             Workspace <span>/</span> <strong>Conversations</strong>
           </div>
           <div className="admin-agent">
-            <span className="admin-agent-avatar">S</span>
+            <Avatar className="admin-agent-avatar">
+              <AvatarFallback className="bg-transparent">S</AvatarFallback>
+            </Avatar>
             <span>
               <strong>Support agent</strong>
               <small>Agent workspace</small>
@@ -152,24 +208,30 @@ export default function AdminPage() {
             </div>
           </div>
           <div className="admin-stats">
-            <div className="admin-stat-card human-stat">
-              <span className="admin-stat-icon urgent">◉</span>
+            <Card className="admin-stat-card human-stat">
+              <span className="admin-stat-icon urgent">
+                <UserRound aria-hidden="true" />
+              </span>
               <span className="admin-stat-label">NEEDS HUMAN SUPPORT</span>
               <strong>{humanRequestCount}</strong>
               <small>Customer requests to follow up</small>
-            </div>
-            <div className="admin-stat-card">
-              <span className="admin-stat-icon">▤</span>
+            </Card>
+            <Card className="admin-stat-card">
+              <span className="admin-stat-icon">
+                <Inbox aria-hidden="true" />
+              </span>
               <span className="admin-stat-label">TOTAL CONVERSATIONS</span>
               <strong>{conversations.length}</strong>
               <small>Across your support inbox</small>
-            </div>
-            <div className="admin-stat-card">
-              <span className="admin-stat-icon mint">◷</span>
+            </Card>
+            <Card className="admin-stat-card">
+              <span className="admin-stat-icon mint">
+                <MessageSquareText aria-hidden="true" />
+              </span>
               <span className="admin-stat-label">MESSAGES</span>
               <strong>{messageCount}</strong>
               <small>Customer and assistant replies</small>
-            </div>
+            </Card>
           </div>
           <div className={`admin-inbox${showDetail ? " show-detail" : ""}`}>
             <section className="admin-list-panel">
@@ -183,17 +245,20 @@ export default function AdminPage() {
                       : "conversations"}
                   </span>
                 </div>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   className="admin-refresh"
                   onClick={() => window.location.reload()}
                   aria-label="Refresh conversations"
                 >
-                  ↻
-                </button>
+                  <RefreshCw aria-hidden="true" />
+                </Button>
               </div>
               <label className="admin-search">
-                <span>⌕</span>
-                <input
+                <Search aria-hidden="true" />
+                <Input
+                  className="admin-search-input"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Search conversations"
@@ -202,19 +267,39 @@ export default function AdminPage() {
               </label>
               <div className="admin-list-scroll">
                 {loading && (
-                  <div className="admin-empty">
-                    <span className="admin-spinner" /> Loading conversations…
+                  <div
+                    className="admin-loading-list"
+                    aria-label="Loading conversations"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {[0, 1, 2, 3].map((item) => (
+                      <div className="admin-loading-row" key={item}>
+                        <Skeleton className="admin-loading-avatar" />
+                        <div className="admin-loading-copy">
+                          <Skeleton className="admin-loading-title" />
+                          <Skeleton className="admin-loading-preview" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
                 {!loading && error && (
-                  <div className="admin-empty admin-error">{error}</div>
+                  <Alert
+                    variant="destructive"
+                    className="admin-empty admin-error"
+                  >
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
                 )}
                 {!loading &&
                   !error &&
                   filtered.map((conversation) => {
                     const latest = conversation.messages.at(-1);
                     return (
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="default"
                         key={conversation.id}
                         className={`admin-conversation${selectedId === conversation.id ? " selected" : ""}`}
                         onClick={() => {
@@ -222,9 +307,11 @@ export default function AdminPage() {
                           setShowDetail(true);
                         }}
                       >
-                        <span className="admin-customer-avatar">
-                          {initials(conversation.title)}
-                        </span>
+                        <Avatar className="admin-customer-avatar">
+                          <AvatarFallback className="bg-transparent">
+                            {initials(conversation.title)}
+                          </AvatarFallback>
+                        </Avatar>
                         <span className="admin-conversation-copy">
                           <span className="admin-conversation-top">
                             <strong>
@@ -237,7 +324,12 @@ export default function AdminPage() {
                           </span>
                           <span className="admin-conversation-meta">
                             {conversation.humanRequested ? (
-                              <b className="human-request-badge">Needs human</b>
+                              <Badge
+                                variant="secondary"
+                                className="human-request-badge"
+                              >
+                                Needs human
+                              </Badge>
                             ) : (
                               <>
                                 <i /> {conversation.messages.length}{" "}
@@ -248,7 +340,7 @@ export default function AdminPage() {
                             )}
                           </span>
                         </span>
-                      </button>
+                      </Button>
                     );
                   })}
                 {!loading && !error && filtered.length === 0 && (
@@ -265,22 +357,30 @@ export default function AdminPage() {
               {selected ? (
                 <>
                   <div className="admin-detail-header">
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       className="admin-back-button"
                       onClick={() => setShowDetail(false)}
                     >
-                      ← <span>All conversations</span>
-                    </button>
+                      <ArrowLeft aria-hidden="true" />{" "}
+                      <span>All conversations</span>
+                    </Button>
                     <div className="admin-detail-person">
-                      <span className="admin-customer-avatar large">
-                        {initials(selected.title)}
-                      </span>
+                      <Avatar className="admin-customer-avatar large">
+                        <AvatarFallback className="bg-transparent">
+                          {initials(selected.title)}
+                        </AvatarFallback>
+                      </Avatar>
                       <span>
                         <strong>{selected.title || "New conversation"}</strong>
                         <small>Customer conversation</small>
                       </span>
                     </div>
-                    <span className="admin-detail-menu">···</span>
+                    <MoreHorizontal
+                      className="admin-detail-menu"
+                      aria-hidden="true"
+                    />
                   </div>
                   <div className="admin-detail-summary">
                     <span>
@@ -302,7 +402,7 @@ export default function AdminPage() {
                     </span>
                   </div>
                   {selected.humanRequested && (
-                    <div className="admin-human-alert">
+                    <Alert className="admin-human-alert">
                       <span>◉</span>
                       <div>
                         <strong>Customer requested human support</strong>
@@ -310,13 +410,37 @@ export default function AdminPage() {
                           This conversation has been prioritized for agent
                           follow-up.
                         </small>
+                        {priorityError && (
+                          <small className="admin-priority-error">
+                            {priorityError}
+                          </small>
+                        )}
                       </div>
-                      <span className="admin-human-priority">PRIORITY</span>
-                    </div>
+                      <Badge
+                        variant="secondary"
+                        className="admin-human-priority"
+                      >
+                        PRIORITY
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="admin-clear-priority"
+                        onClick={() => void clearPriority(selected.id)}
+                        disabled={priorityUpdatingId === selected.id}
+                      >
+                        <FlagOff aria-hidden="true" />
+                        {priorityUpdatingId === selected.id
+                          ? "Clearing…"
+                          : "Clear priority"}
+                      </Button>
+                    </Alert>
                   )}
                   <div className="admin-thread">
                     <div className="admin-thread-date">
-                      CONVERSATION HISTORY
+                      <Separator />
+                      <span>CONVERSATION HISTORY</span>
+                      <Separator />
                     </div>
                     {selected.messages.length === 0 && (
                       <div className="admin-thread-empty">
@@ -346,9 +470,9 @@ export default function AdminPage() {
                             )}
                           </time>
                         </div>
-                        <div className="admin-message-bubble">
+                        <Card className="admin-message-bubble">
                           {message.content}
-                        </div>
+                        </Card>
                       </div>
                     ))}
                   </div>
@@ -358,7 +482,7 @@ export default function AdminPage() {
                 </>
               ) : (
                 <div className="admin-no-selection">
-                  <span>▤</span>
+                  <Inbox aria-hidden="true" />
                   <strong>Select a conversation</strong>
                   <p>
                     Choose a conversation from the list to view its message
