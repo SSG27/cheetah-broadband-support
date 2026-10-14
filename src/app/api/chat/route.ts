@@ -12,11 +12,17 @@ export async function POST(request: NextRequest) {
       !("message" in body) ||
       typeof body.message !== "string"
     ) {
-      return NextResponse.json({ error: "A conversation and message are required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "A conversation and message are required" },
+        { status: 400 },
+      );
     }
     const content = body.message.trim();
     if (!content || content.length > 1000) {
-      return NextResponse.json({ error: "Message must be between 1 and 1000 characters" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Message must be between 1 and 1000 characters" },
+        { status: 400 },
+      );
     }
 
     const result = await sendMessage(body.conversationId, content);
@@ -26,6 +32,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
     console.error("[api/chat] request failed", error);
-    return NextResponse.json({ error: "We couldn’t process that message. Please try again." }, { status: 500 });
+    return NextResponse.json(
+      { error: "We couldn’t process that message. Please try again." },
+      { status: 500 },
+    );
   }
 }

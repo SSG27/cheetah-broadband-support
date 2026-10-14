@@ -11,17 +11,28 @@ export async function GET() {
     return NextResponse.json(conversations);
   } catch (error) {
     console.error("[api/conversations] failed to load", error);
-    return NextResponse.json({ error: "Unable to load conversations" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Unable to load conversations" },
+      { status: 500 },
+    );
   }
 }
 
 export async function POST() {
   try {
-    const conversation = await prisma.conversation.create({ data: {}, include: { messages: true } });
-    console.info("[api/conversations] created", { conversationId: conversation.id });
+    const conversation = await prisma.conversation.create({
+      data: {},
+      include: { messages: true },
+    });
+    console.info("[api/conversations] created", {
+      conversationId: conversation.id,
+    });
     return NextResponse.json(conversation, { status: 201 });
   } catch (error) {
     console.error("[api/conversations] failed to create", error);
-    return NextResponse.json({ error: "Unable to create conversation" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Unable to create conversation" },
+      { status: 500 },
+    );
   }
 }

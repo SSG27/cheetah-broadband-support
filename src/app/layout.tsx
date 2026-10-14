@@ -6,7 +6,9 @@ export const metadata: Metadata = {
   description: "Fast, friendly broadband support from Cheetah Broadband.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en-GB">
       <body>{children}</body>
