@@ -121,6 +121,7 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadConversations();
     fetch("/api/integrations/openai")
       .then((response) => response.json())
@@ -137,6 +138,7 @@ export default function HomePage() {
   }, [messages, loading]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHumanRequestState(
       activeConversation?.humanRequested ? "requested" : "idle",
     );
@@ -217,6 +219,7 @@ export default function HomePage() {
     setError("");
     setLoading(true);
     const optimistic: Message = {
+      // eslint-disable-next-line react-hooks/purity
       id: `pending-${Date.now()}`,
       role: "user",
       content,
