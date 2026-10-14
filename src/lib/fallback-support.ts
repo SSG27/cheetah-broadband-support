@@ -1,5 +1,4 @@
-export class FallbackSupport {
-  reply(message: string): string {
+export function fallbackSupport(message: string): string {
     const text = message.toLowerCase();
     if (/outage|down|offline|no internet|not working/.test(text)) {
       return "Let’s get you back online. First, check that your router’s broadband light is steady and restart it by unplugging it for 30 seconds. You can also check the service status card on your dashboard. If the light is still red after five minutes, I can connect you with our support team.";
@@ -17,5 +16,4 @@ export class FallbackSupport {
       return "I can arrange for a Cheetah support specialist to help with that. Please use the secure contact option in My Account so the team can verify your details safely. You can also call us on 0800 014 2025, Monday to Saturday, 8am–8pm.";
     }
     return "Thanks for getting in touch with Cheetah Broadband. I can help with Wi-Fi, connection speeds, service issues and general billing questions. Could you tell me a little more about what’s happening? For account-specific help, I can point you to a support specialist.";
-  }
 }

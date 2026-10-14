@@ -1,27 +1,33 @@
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 
-export interface AIProvider {
-  reply(history: ChatTurn[]): Promise<string>;
-}
+export type AIProviderOptions = {
+  apiKey?: string;
+  model?: string;
+  fetcher?: typeof fetch;
+};
 
-export class OpenAIProvider implements AIProvider {
-  constructor(
-    private readonly apiKey = process.env.OPENAI_API_KEY,
-    private readonly model = process.env.OPENAI_MODEL ?? "gpt-4o-mini",
-    private readonly fetcher: typeof fetch = fetch,
-  ) {}
+export async function openAIReply(
+  history: ChatTurn[],
+  options: AIProviderOptions = {}
+): Promise<string> {
+  const apiKey = options.apiKey ?? process.env.OPENAI_API_KEY;
+  const model = options.model ?? process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+  const fetcher = options.fetcher ?? fetch;
 
-  async reply(history: ChatTurn[]): Promise<string> {
-    if (!this.apiKey) throw new Error("AI provider is not configured");
+  if (!apiKey) {
+    throw new Error("AI provider is not configured");
+  }
 
-    const response = await this.fetcher("https://api.openai.com/v1/chat/completions", {
+  const response = await fetcher(
+    "https://api.openai.com/v1/chat/completions",
+    {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: this.model,
+        model,
         temperature: 0.4,
         messages: [
           {
@@ -48,13 +54,18 @@ export class OpenAIProvider implements AIProvider {
     return answer;
   }
 
-  async checkConnection(): Promise<boolean> {
-    if (!this.apiKey) throw new Error("OPENAI_API_KEY is not configured");
-    const response = await this.fetcher("https://api.openai.com/v1/models", {
-      headers: { Authorization: `Bearer ${this.apiKey}` },
+export async function checkAIConnection(
+  options: AIProviderOptions = {}
+): Promise<boolean> {
+  const apiKey = options.apiKey ?? process.env.OPENAI_API_KEY;
+  if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
+  const response = await fetch(
+    "https://api.openai.com/v1/models",
+    {
+      headers: {Authorization: `Bearer ${apiKey}`},
       signal: AbortSignal.timeout(10_000),
-    });
-    if (!response.ok) throw new Error(`AI provider connection failed (${response.status})`);
-    return true;
-  }
+    }
+  );
+  if (!response.ok) throw new Error(`AI provider connection failed (${response.status})`);
+  return true;
 }

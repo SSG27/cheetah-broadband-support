@@ -1,13 +1,10 @@
 import { prisma } from "@/lib/prisma";
-import { FallbackSupport } from "@/lib/fallback-support";
-import { OpenAIProvider, type ChatTurn } from "@/lib/ai-provider";
+import { fallbackSupport } from "@/lib/fallback-support";
+import { openAIReply, type ChatTurn } from "@/lib/ai-provider";
 
-export class ChatService {
-  private readonly fallback = new FallbackSupport();
-
-  async send(conversationId: string, content: string) {
-    const conversation = await prisma.conversation.findUnique({ where: { id: conversationId } });
-    if (!conversation) throw new Error("Conversation not found");
+export async function sendMessage(conversationId: string, content: string) {
+    const conversation = await prisma.conversation.findUnique({where: { id: conversationId }});
+    if (!conversation) throw new Error("Conversation not found")
 
     const userMessage = await prisma.message.create({
       data: { role: "user", content, conversationId },
@@ -36,14 +33,14 @@ export class ChatService {
     let source: "ai" | "fallback" = "fallback";
     if (process.env.OPENAI_API_KEY) {
       try {
-        answer = await new OpenAIProvider().reply(history);
+        answer = await openAIReply(history);
         source = "ai";
       } catch (error) {
         console.warn("[chat] AI provider unavailable; using local support response", error);
-        answer = this.fallback.reply(content);
+        answer = fallbackSupport(content);
       }
     } else {
-      answer = this.fallback.reply(content);
+      answer = fallbackSupport(content);
     }
 
     const assistantMessage = await prisma.message.create({
@@ -51,5 +48,4 @@ export class ChatService {
     });
     console.info("[chat] message handled", { conversationId, source });
     return { userMessage, assistantMessage, source };
-  }
 }
