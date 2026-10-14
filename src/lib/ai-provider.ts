@@ -68,26 +68,3 @@ export async function checkAIConnection(
     throw new Error(`AI provider connection failed (${response.status})`);
   return true;
 }
-
-export class OpenAIProvider {
-  constructor(
-    private apiKey: string,
-    private model: string = "gpt-4o-mini",
-    private fetcher: typeof fetch = fetch,
-  ) {}
-
-  async reply(history: ChatTurn[]): Promise<string> {
-    return openAIReply(history, {
-      apiKey: this.apiKey,
-      model: this.model,
-      fetcher: this.fetcher,
-    });
-  }
-
-  async checkConnection(): Promise<boolean> {
-    return checkAIConnection({
-      apiKey: this.apiKey,
-      fetcher: this.fetcher,
-    });
-  }
-}

@@ -17,9 +17,3 @@ export function fallbackSupport(message: string): string {
   }
   return "Thanks for getting in touch with Cheetah Broadband. I can help with Wi-Fi, connection speeds, service issues and general billing questions. Could you tell me a little more about what’s happening? For account-specific help, I can point you to a support specialist.";
 }
-
-export class FallbackSupport {
-  reply(message: string): string {
-    return fallbackSupport(message);
-  }
-}

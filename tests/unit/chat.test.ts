@@ -1,18 +1,18 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { prisma } from "../../src/lib/prisma";
-import { ChatService } from "../../src/lib/chat-service";
-import { FallbackSupport } from "../../src/lib/fallback-support";
-import { OpenAIProvider } from "../../src/lib/ai-provider";
+import { fallbackSupport } from "../../src/lib/fallback-support";
+import { sendMessage } from "../../src/lib/chat-service";
+import { AIProviderOptions, openAIReply } from "../../src/lib/ai-provider";
 
 describe("FallbackSupport", () => {
   it("returns Wi-Fi troubleshooting advice for slow internet", () => {
-    const reply = new FallbackSupport().reply("My Wi-Fi is slow");
+    const reply = fallbackSupport("My Wi-Fi is slow");
 
     expect(reply.toLowerCase()).toMatch(/speed|router|wi-fi|wifi/);
   });
 
   it("returns an outage response when the connection is down", () => {
-    const reply = new FallbackSupport().reply("My internet is down");
+    const reply = fallbackSupport("My internet is down");
 
     expect(reply.toLowerCase()).toMatch(/router|restart|offline|online/);
   });
@@ -27,7 +27,7 @@ describe("ChatService", () => {
   it("stores the user message and assistant reply in the same conversation", async () => {
     const conversation = await prisma.conversation.create({ data: {} });
 
-    const result = await new ChatService().send(
+    const result = await sendMessage(
       conversation.id,
       "My Wi-Fi is slow",
     );
@@ -57,16 +57,14 @@ describe("OpenAIProvider", () => {
         },
       ),
     );
-
-    const provider = new OpenAIProvider(
-      "test-key",
-      "test-model",
-      fakeFetch as typeof fetch,
-    );
-
-    const reply = await provider.reply([
+    const options: AIProviderOptions = {
+      apiKey: "test-key",
+      model: "test-model",
+      fetcher: fakeFetch as typeof fetch,
+    };
+    const reply = await openAIReply([
       { role: "user", content: "My Wi-Fi is slow" },
-    ]);
+    ], options);
 
     expect(reply).toBe("Try restarting your router.");
     expect(fakeFetch).toHaveBeenCalledTimes(1);
