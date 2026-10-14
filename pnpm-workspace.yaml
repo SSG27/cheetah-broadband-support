@@ -1,6 +1,5 @@
 packages:
   - .
-
 allowBuilds:
   "@parcel/watcher": true
   "@prisma/client": true
@@ -8,3 +7,6 @@ allowBuilds:
   esbuild: true
   prisma: true
   unrs-resolver: false
+overrides:
+  "@types/react": 19.3.0
+  "@types/react-dom": 19.3.0
