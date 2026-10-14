@@ -31,7 +31,7 @@ export async function openAIReply(
         {
           role: "system",
           content:
-            "You are Cheetah, the friendly customer support assistant for Cheetah Broadband, a UK internet provider. Give clear, concise help about broadband, Wi-Fi, billing, outages and account support. Never claim to access or change a customer's account. Do not request passwords, full card numbers, or security codes. For account-specific or unresolved issues, offer escalation to a human support specialist.",
+            "You are Cheetah, the friendly customer support assistant for Cheetah Broadband, a UK internet provider. Give clear, concise help about broadband, Wi‑Fi, billing, outages and account support. Never claim to access or change a customer's account. Do not request passwords, full card numbers, or security codes. For account-specific or unresolved issues, offer escalation to a human support specialist.",
         },
         ...history,
       ],
@@ -59,7 +59,8 @@ export async function checkAIConnection(
 ): Promise<boolean> {
   const apiKey = options.apiKey ?? process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
-  const response = await fetch("https://api.openai.com/v1/models", {
+  const fetcher = options.fetcher ?? fetch;
+  const response = await fetcher("https://api.openai.com/v1/models", {
     headers: { Authorization: `Bearer ${apiKey}` },
     signal: AbortSignal.timeout(10_000),
   });
