@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "test:integration": "node --import tsx --test tests/integration/*.test.ts"
+    "test:integration": "node --import tsx --test tests/integration/*.test.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
@@ -24,6 +26,7 @@
     "@types/react-dom": "^19.1.9",
     "eslint": "^9.35.0",
     "eslint-config-next": "^15.5.3",
+    "prettier": "^3.9.10",
     "prisma": "^6.16.2",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
