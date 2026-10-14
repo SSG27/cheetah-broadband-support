@@ -3,7 +3,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Message = { id: string; role: "user" | "assistant"; content: string; createdAt: string };
-type Conversation = { id: string; title: string; updatedAt: string; messages: Message[] };
+type Conversation = { id: string; title: string; updatedAt: string; humanRequested?: boolean; messages: Message[] };
 
 const suggestions = [
   { icon: "⌁", title: "Improve my Wi-Fi", prompt: "How can I improve my Wi-Fi signal at home?" },
@@ -28,6 +28,7 @@ export default function HomePage() {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
   const [aiConnected, setAiConnected] = useState<boolean | null>(null);
+  const [humanRequestState, setHumanRequestState] = useState<"idle" | "pending" | "requested" | "error">("idle");
   const messagesContainer = useRef<HTMLDivElement>(null);
   const activeConversation = conversations.find((item) => item.id === activeId);
   const messages = useMemo(() => activeConversation?.messages ?? [], [activeConversation?.messages]);
@@ -65,6 +66,24 @@ export default function HomePage() {
     const container = messagesContainer.current;
     if (container) container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
+
+  useEffect(() => {
+    setHumanRequestState(activeConversation?.humanRequested ? "requested" : "idle");
+  }, [activeId, activeConversation?.humanRequested]);
+
+  async function requestHumanSupport() {
+    if (!activeId || humanRequestState === "pending" || humanRequestState === "requested") return;
+    setHumanRequestState("pending");
+    try {
+      const response = await fetch(`/api/conversations/${activeId}/human-request`, { method: "POST" });
+      if (!response.ok) throw new Error("Request failed");
+      setConversations((items) => items.map((item) => item.id === activeId ? { ...item, humanRequested: true } : item));
+      setHumanRequestState("requested");
+    } catch (cause) {
+      console.error("[ui] human support request failed", cause);
+      setHumanRequestState("error");
+    }
+  }
 
   async function newConversation() {
     setError("");
@@ -126,6 +145,7 @@ export default function HomePage() {
         <div className="brand"><BrandMark /><div><strong>cheetah</strong><span>BROADBAND</span></div></div>
         <div className="sidebar-label">WORKSPACE</div>
         <button className="nav-item selected"><span className="nav-icon">◌</span> Customer care</button>
+        <a className="nav-item" href="/admin"><span className="nav-icon">▤</span> Support inbox</a>
         <button className="nav-item" onClick={() => void newConversation()}><span className="nav-icon">▤</span> My conversations</button>
         <div className="sidebar-section"><span className="sidebar-label">RECENT CHATS</span><button className="plus-button" onClick={() => void newConversation()} aria-label="Start a new chat">＋</button></div>
         <div className="conversation-list">
@@ -166,7 +186,7 @@ export default function HomePage() {
 
           <aside className="info-column">
             <div className="connection-card"><div className="card-topline"><span className="card-icon">⌁</span><span className="live-pill"><i /> DEMO</span></div><span className="card-eyebrow">NETWORK STATUS</span><h2>Looking good.</h2><p>Sample service status for this demonstration. No live network systems are connected.</p><div className="connection-visual"><div className="signal-bars"><i /><i /><i /><i /></div><span>Demo status · all systems operational</span></div><span className="text-link">Service status overview</span></div>
-            <div className="quick-help-card"><div className="quick-help-header"><span className="headset-icon">◉</span><div><strong>Prefer a human?</strong><span>We’re here for you, too.</span></div></div><div className="divider" /><div className="contact-row"><span>Call our team</span><a href="tel:08000142025">0800 014 2025</a></div><div className="contact-row"><span>Opening hours</span><strong>Mon–Sat, 8am–8pm</strong></div><button className="contact-button" onClick={() => { setDraft("I’d like to speak with a support specialist."); }}>Get more support <span>→</span></button></div>
+            <div className="quick-help-card"><div className="quick-help-header"><span className="headset-icon">◉</span><div><strong>Prefer a human?</strong><span>We’re here for you, too.</span></div></div><div className="divider" /><div className="contact-row"><span>Call our team</span><a href="tel:08000142025">0800 014 2025</a></div><div className="contact-row"><span>Opening hours</span><strong>Mon–Sat, 8am–8pm</strong></div><button className={`contact-button${humanRequestState === "requested" ? " requested" : ""}`} onClick={() => void requestHumanSupport()} disabled={!ready || humanRequestState === "pending" || humanRequestState === "requested"}>{humanRequestState === "requested" ? "Human support requested" : humanRequestState === "pending" ? "Sending request…" : "Request a human"}<span>{humanRequestState === "requested" ? "✓" : "→"}</span></button>{humanRequestState === "error" && <div className="human-request-error">Couldn’t send your request. Please try again.</div>}</div>
             <div className="trust-note"><span>✳</span><p><strong>We’ve got your back.</strong><br />Real people, real fast. Our UK-based team is always just a call away.</p></div>
             <div className="data-note"><span className="data-shield">◈</span> Your data stays yours. <a href="#privacy">Privacy promise</a></div>
           </aside>

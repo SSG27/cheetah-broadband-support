@@ -4,8 +4,7 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   try {
     const conversations = await prisma.conversation.findMany({
-      orderBy: { updatedAt: "desc" },
-      take: 30,
+      orderBy: [{ humanRequested: "desc" }, { updatedAt: "desc" }],
       include: { messages: { orderBy: { createdAt: "asc" } } },
     });
     return NextResponse.json(conversations);
