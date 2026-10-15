@@ -1,8 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { fallbackSupport } from "@/lib/fallback-support";
 import { openAIReply, type ChatTurn } from "@/lib/ai-provider";
+import { detectSupportIntent } from "@/lib/intents";
 
 export async function sendMessage(conversationId: string, content: string) {
+  const intent = detectSupportIntent(content);
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
   });
@@ -35,7 +37,7 @@ export async function sendMessage(conversationId: string, content: string) {
   let source: "ai" | "fallback" = "fallback";
   if (process.env.OPENAI_API_KEY) {
     try {
-      answer = await openAIReply(history);
+      answer = await openAIReply(history, {}, intent);
       source = "ai";
     } catch (error) {
       console.warn(
@@ -52,5 +54,5 @@ export async function sendMessage(conversationId: string, content: string) {
     data: { role: "assistant", content: answer, conversationId },
   });
   console.info("[chat] message handled", { conversationId, source });
-  return { userMessage, assistantMessage, source };
+  return { userMessage, assistantMessage, source, intent };
 }

@@ -1,3 +1,5 @@
+import { intentGuidance, type SupportIntent } from "@/lib/intents";
+
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 
 export type AIProviderOptions = {
@@ -9,6 +11,7 @@ export type AIProviderOptions = {
 export async function openAIReply(
   history: ChatTurn[],
   options: AIProviderOptions = {},
+  intent: SupportIntent = "general_support",
 ): Promise<string> {
   const apiKey = options.apiKey ?? process.env.OPENAI_API_KEY;
   const model = options.model ?? process.env.OPENAI_MODEL ?? "gpt-4o-mini";
@@ -31,7 +34,7 @@ export async function openAIReply(
         {
           role: "system",
           content:
-            "You are Cheetah, the friendly customer support assistant for Cheetah Broadband, a UK internet provider. Give clear, concise help about broadband, Wi‑Fi, billing, outages and account support. Never claim to access or change a customer's account. Do not request passwords, full card numbers, or security codes. For account-specific or unresolved issues, offer escalation to a human support specialist.",
+            `You are Cheetah, the friendly customer support assistant for Cheetah Broadband, a UK internet provider. Give clear, concise help about broadband, Wi-Fi, billing, outages and account support. The detected customer intent is "${intent}". Focus on this guidance: ${intentGuidance[intent]} Never claim to access or change a customer's account. Do not request passwords, full card numbers, or security codes. For account-specific or unresolved issues, offer escalation to a human support specialist.`,
         },
         ...history,
       ],
