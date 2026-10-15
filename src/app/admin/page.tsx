@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import useSWR from "swr";
 import {
   ArrowLeft,
   FlagOff,
@@ -21,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BrandMark } from "@/components/brand-mark";
+import { apiFetcher } from "@/lib/api-fetcher";
 
 type Message = {
   id: string;
@@ -61,40 +63,22 @@ function initials(title: string) {
 }
 
 export default function AdminPage() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const {
+    data: conversations = [],
+    error,
+    isLoading: loading,
+    mutate: mutateConversations,
+  } = useSWR<Conversation[]>("/api/conversations", apiFetcher);
   const [selectedId, setSelectedId] = useState("");
   const [showDetail, setShowDetail] = useState(false);
   const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [priorityUpdatingId, setPriorityUpdatingId] = useState("");
   const [priorityError, setPriorityError] = useState("");
 
-  useEffect(() => {
-    let active = true;
-    fetch("/api/conversations")
-      .then((response) => {
-        if (!response.ok) throw new Error("Unable to load conversations");
-        return response.json() as Promise<Conversation[]>;
-      })
-      .then((data) => {
-        if (!active) return;
-        setConversations(data);
-        setSelectedId(data[0]?.id ?? "");
-      })
-      .catch(() => {
-        if (active)
-          setError(
-            "We couldn’t load conversations. Please refresh to try again.",
-          );
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
+  const loadError = error
+    ? "We couldn’t load conversations. Please refresh to try again."
+    : "";
+  const activeSelectedId = selectedId || conversations[0]?.id || "";
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -114,7 +98,7 @@ export default function AdminPage() {
       );
   }, [conversations, query]);
   const selected = conversations.find(
-    (conversation) => conversation.id === selectedId,
+    (conversation) => conversation.id === activeSelectedId,
   );
   const messageCount = conversations.reduce(
     (total, conversation) => total + conversation.messages.length,
@@ -136,16 +120,18 @@ export default function AdminPage() {
         humanRequested: boolean;
         updatedAt: string;
       };
-      setConversations((items) =>
-        items.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                humanRequested: updated.humanRequested,
-                updatedAt: updated.updatedAt,
-              }
-            : item,
-        ),
+      await mutateConversations(
+        (items = []) =>
+          items.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  humanRequested: updated.humanRequested,
+                  updatedAt: updated.updatedAt,
+                }
+              : item,
+          ),
+        { revalidate: false },
       );
     } catch (cause) {
       console.error("[admin] failed to clear conversation priority", cause);
@@ -249,7 +235,7 @@ export default function AdminPage() {
                   variant="ghost"
                   size="icon-sm"
                   className="admin-refresh"
-                  onClick={() => window.location.reload()}
+                  onClick={() => void mutateConversations()}
                   aria-label="Refresh conversations"
                 >
                   <RefreshCw aria-hidden="true" />
@@ -284,16 +270,16 @@ export default function AdminPage() {
                     ))}
                   </div>
                 )}
-                {!loading && error && (
+                {!loading && loadError && (
                   <Alert
                     variant="destructive"
                     className="admin-empty admin-error"
                   >
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription>{loadError}</AlertDescription>
                   </Alert>
                 )}
                 {!loading &&
-                  !error &&
+                  !loadError &&
                   filtered.map((conversation) => {
                     const latest = conversation.messages.at(-1);
                     return (
@@ -301,7 +287,7 @@ export default function AdminPage() {
                         variant="ghost"
                         size="default"
                         key={conversation.id}
-                        className={`admin-conversation${selectedId === conversation.id ? " selected" : ""}`}
+                        className={`admin-conversation${activeSelectedId === conversation.id ? " selected" : ""}`}
                         onClick={() => {
                           setSelectedId(conversation.id);
                           setShowDetail(true);
@@ -343,7 +329,7 @@ export default function AdminPage() {
                       </Button>
                     );
                   })}
-                {!loading && !error && filtered.length === 0 && (
+                {!loading && !loadError && filtered.length === 0 && (
                   <div className="admin-empty">
                     {query
                       ? "No conversations match your search."
