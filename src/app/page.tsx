@@ -8,6 +8,35 @@ import {
   useRef,
   useState,
 } from "react";
+import {
+  ArrowUp,
+  CircleHelp,
+  Inbox,
+  Plus,
+  ShieldCheck,
+  Trash2,
+  Gauge,
+  WifiIcon,
+  GlobeOff,
+  PoundSterling,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { BrandMark } from "@/components/brand-mark";
 
 type Message = {
   id: string;
@@ -25,53 +54,26 @@ type Conversation = {
 
 const suggestions = [
   {
-    icon: "⌁",
+    icon: WifiIcon,
     title: "Improve my Wi-Fi",
     prompt: "How can I improve my Wi-Fi signal at home?",
   },
   {
-    icon: "↗",
+    icon: Gauge,
     title: "Check my speed",
     prompt: "My broadband speed feels slower than usual. What should I try?",
   },
   {
-    icon: "◉",
+    icon: GlobeOff,
     title: "Connection issue",
     prompt: "My internet connection keeps dropping out.",
   },
   {
-    icon: "£",
+    icon: PoundSterling,
     title: "Billing question",
     prompt: "Where can I find my latest bill?",
   },
 ];
-
-function BrandMark() {
-  return (
-    <div className="brand-mark" aria-hidden="true">
-      <svg viewBox="0 0 40 40" fill="none">
-        <path
-          d="M6 25.8c2.3-8.5 8.4-14.2 17.2-14.2 5 0 8.8 1.7 11.2 4.6-4.8-.4-8.7 1.2-11.3 4.2-2.8 3.1-6.8 5-12.1 5.5L6 25.8Z"
-          fill="currentColor"
-        />
-        <path
-          d="M10.7 28.1c6.7 1.1 12.7-.6 17.7-5.2-1.8 7.3-7.7 11.6-15.9 10.5l-1.8-5.3Z"
-          fill="currentColor"
-          opacity=".65"
-        />
-        <circle cx="27" cy="16" r="1.2" fill="#fff" />
-      </svg>
-    </div>
-  );
-}
-
-function ChatAvatar({ small = false }: { small?: boolean }) {
-  return (
-    <div className={`chat-avatar${small ? " small" : ""}`}>
-      <BrandMark />
-    </div>
-  );
-}
 
 export default function HomePage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -84,6 +86,10 @@ export default function HomePage() {
   const [humanRequestState, setHumanRequestState] = useState<
     "idle" | "pending" | "requested" | "error"
   >("idle");
+  const [deletingConversationId, setDeletingConversationId] = useState("");
+  const [conversationToDelete, setConversationToDelete] =
+    useState<Conversation | null>(null);
+  const [deleteError, setDeleteError] = useState("");
   const messagesContainer = useRef<HTMLDivElement>(null);
   const activeConversation = conversations.find((item) => item.id === activeId);
   const messages = useMemo(
@@ -115,6 +121,7 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadConversations();
     fetch("/api/integrations/openai")
       .then((response) => response.json())
@@ -131,6 +138,7 @@ export default function HomePage() {
   }, [messages, loading]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHumanRequestState(
       activeConversation?.humanRequested ? "requested" : "idle",
     );
@@ -176,6 +184,33 @@ export default function HomePage() {
     }
   }
 
+  async function deleteConversation(id: string) {
+    if (loading && id === activeId) return;
+    setDeletingConversationId(id);
+    setDeleteError("");
+    try {
+      const response = await fetch(`/api/conversations/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Unable to delete this conversation");
+      setConversations((items) => items.filter((item) => item.id !== id));
+      if (activeId === id) {
+        const remaining = conversations.filter((item) => item.id !== id);
+        if (remaining[0]) setActiveId(remaining[0].id);
+        else {
+          setActiveId("");
+          await newConversation();
+        }
+      }
+      setConversationToDelete(null);
+    } catch (cause) {
+      console.error("[ui] conversation deletion failed", cause);
+      setDeleteError("We couldn’t delete this chat. Please try again.");
+    } finally {
+      setDeletingConversationId("");
+    }
+  }
+
   async function sendMessage(event?: FormEvent, suggestedText?: string) {
     event?.preventDefault();
     const content = (suggestedText ?? draft).trim();
@@ -184,6 +219,7 @@ export default function HomePage() {
     setError("");
     setLoading(true);
     const optimistic: Message = {
+      // eslint-disable-next-line react-hooks/purity
       id: `pending-${Date.now()}`,
       role: "user",
       content,
@@ -274,16 +310,17 @@ export default function HomePage() {
           <span className="nav-icon">◌</span> Customer care
         </button>
         <a className="nav-item" href="/admin">
-          <span className="nav-icon">▤</span> Support inbox
+          <span className="nav-icon">
+            <Inbox aria-hidden="true" />
+          </span>{" "}
+          Support inbox
         </a>
-        <button className="nav-item" onClick={() => void newConversation()}>
-          <span className="nav-icon">▤</span> My conversations
-        </button>
         <div className="sidebar-section">
           <span className="sidebar-label">RECENT CHATS</span>
           <button
             className="plus-button"
             onClick={() => void newConversation()}
+            disabled={!!deletingConversationId}
             aria-label="Start a new chat"
           >
             ＋
@@ -291,14 +328,34 @@ export default function HomePage() {
         </div>
         <div className="conversation-list">
           {conversations.map((conversation) => (
-            <button
-              key={conversation.id}
-              className={`conversation-link${activeId === conversation.id ? " active" : ""}`}
-              onClick={() => setActiveId(conversation.id)}
-            >
-              <span className="conversation-dot" />
-              {conversation.title}
-            </button>
+            <div className="conversation-item" key={conversation.id}>
+              <button
+                className={`conversation-link${activeId === conversation.id ? " active" : ""}`}
+                onClick={() => setActiveId(conversation.id)}
+                disabled={!!deletingConversationId}
+              >
+                <span className="conversation-dot" />
+                {conversation.title || "New conversation"}
+              </button>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                className="delete-conversation-button"
+                aria-label={`Delete ${conversation.title || "new conversation"}`}
+                title="Delete conversation"
+                disabled={
+                  !!conversationToDelete ||
+                  deletingConversationId === conversation.id ||
+                  (loading && activeId === conversation.id)
+                }
+                onClick={() => {
+                  setDeleteError("");
+                  setConversationToDelete(conversation);
+                }}
+              >
+                <Trash2 aria-hidden="true" />
+              </Button>
+            </div>
           ))}
           {!conversations.length && (
             <span className="muted sidebar-empty">
@@ -331,11 +388,16 @@ export default function HomePage() {
           </div>
           <div className="topbar-right">
             <div className="secure-label">
-              <span>◇</span> Secure conversation
+              <ShieldCheck aria-hidden="true" /> Secure conversation
             </div>
-            <button className="help-button" aria-label="Help">
-              ?
-            </button>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              className="help-button"
+              aria-label="Help"
+            >
+              <CircleHelp aria-hidden="true" />
+            </Button>
           </div>
         </header>
         <div className="work-area">
@@ -356,17 +418,24 @@ export default function HomePage() {
                 </h1>
                 <p>How can we make your day a little faster?</p>
               </div>
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 className="new-chat-button"
                 onClick={() => void newConversation()}
+                disabled={!!deletingConversationId}
               >
-                <span>＋</span> New chat
-              </button>
+                <Plus aria-hidden="true" /> New chat
+              </Button>
             </div>
-            <div className="chat-card">
+            <Card className="chat-card">
               <div className="chat-card-header">
                 <div className="assistant-id">
-                  <ChatAvatar small />
+                  <Avatar className="chat-avatar small">
+                    <AvatarFallback className="bg-transparent">
+                      <BrandMark />
+                    </AvatarFallback>
+                  </Avatar>
                   <div>
                     <strong>Cheetah Assistant</strong>
                     <span>
@@ -374,16 +443,13 @@ export default function HomePage() {
                     </span>
                   </div>
                 </div>
-                <div className="powered">
-                  {aiConnected ? (
-                    <>
-                      <span className="provider-dot" /> AI POWERED
-                    </>
-                  ) : (
-                    <>
-                      <span className="local-dot" /> SUPPORT MODE
-                    </>
-                  )}
+                <div>
+                  <Badge variant="secondary" className="powered">
+                    <span
+                      className={aiConnected ? "provider-dot" : "local-dot"}
+                    />
+                    {aiConnected ? "AI POWERED" : "SUPPORT MODE"}
+                  </Badge>
                 </div>
               </div>
               <div className="messages-area" ref={messagesContainer}>
@@ -395,16 +461,20 @@ export default function HomePage() {
                 )}
                 {ready && messages.length === 0 && (
                   <div className="welcome-message">
-                    <ChatAvatar />
+                    <Avatar className="chat-avatar">
+                      <AvatarFallback className="bg-transparent">
+                        <BrandMark />
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="welcome-copy">
                       <span className="message-time">
                         CHEETAH ASSISTANT · JUST NOW
                       </span>
-                      <div className="assistant-bubble">
+                      <Card className="assistant-bubble">
                         Hi there! I’m your Cheetah Broadband assistant. I can
                         help with your connection, Wi-Fi, speed and billing
                         questions. What can I help you with today?
-                      </div>
+                      </Card>
                     </div>
                   </div>
                 )}
@@ -413,7 +483,13 @@ export default function HomePage() {
                     key={message.id}
                     className={`message-row ${message.role === "user" ? "from-user" : "from-assistant"}`}
                   >
-                    {message.role === "assistant" && <ChatAvatar />}
+                    {message.role === "assistant" && (
+                      <Avatar className="chat-avatar">
+                        <AvatarFallback className="bg-transparent">
+                          <BrandMark />
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
                     <div className="message-content">
                       <span className="message-time">
                         {message.role === "user" ? "YOU" : "CHEETAH ASSISTANT"}{" "}
@@ -423,7 +499,7 @@ export default function HomePage() {
                           { hour: "2-digit", minute: "2-digit" },
                         )}
                       </span>
-                      <div
+                      <Card
                         className={
                           message.role === "user"
                             ? "user-bubble"
@@ -431,7 +507,7 @@ export default function HomePage() {
                         }
                       >
                         {message.content}
-                      </div>
+                      </Card>
                     </div>
                     {message.role === "user" && (
                       <div className="user-avatar">C</div>
@@ -440,7 +516,11 @@ export default function HomePage() {
                 ))}
                 {loading && (
                   <div className="message-row from-assistant">
-                    <ChatAvatar />
+                    <Avatar className="chat-avatar">
+                      <AvatarFallback className="bg-transparent">
+                        <BrandMark />
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="typing-indicator">
                       <span />
                       <span />
@@ -456,25 +536,33 @@ export default function HomePage() {
                   </span>
                   <div className="suggestion-grid">
                     {suggestions.map((item) => (
-                      <button
+                      <Button
+                        variant="outline"
+                        size="sm"
                         key={item.title}
                         className="suggestion-card"
                         onClick={() => void sendMessage(undefined, item.prompt)}
                       >
-                        <span className="suggestion-icon">{item.icon}</span>
+                        <item.icon />
                         <span>{item.title}</span>
                         <span className="suggestion-arrow">↗</span>
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
               )}
-              {error && <div className="error-banner">{error}</div>}
+              {error && (
+                <Alert variant="destructive" className="error-banner">
+                  <CircleHelp aria-hidden="true" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
               <form
                 className="composer"
                 onSubmit={(event) => void sendMessage(event)}
               >
-                <input
+                <Input
+                  className="composer-input"
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
                   placeholder="Ask us anything about your broadband…"
@@ -482,20 +570,22 @@ export default function HomePage() {
                   disabled={!ready || loading}
                 />
                 <span className="character-count">{draft.length}/1000</span>
-                <button
+                <Button
+                  variant="default"
+                  size="icon"
                   className="send-button"
                   type="submit"
                   disabled={!draft.trim() || loading || !ready}
                   aria-label="Send message"
                 >
-                  ↑
-                </button>
+                  <ArrowUp aria-hidden="true" />
+                </Button>
               </form>
               <div className="privacy-note">
                 <span>♧</span> Your conversation is private and securely stored.{" "}
                 <a href="#privacy">Learn about privacy</a>
               </div>
-            </div>
+            </Card>
             <div className="chat-footnote">
               Cheetah Assistant can make mistakes. For account changes, speak
               with our support team.
@@ -535,7 +625,7 @@ export default function HomePage() {
                   <span>We’re here for you, too.</span>
                 </div>
               </div>
-              <div className="divider" />
+              <Separator className="divider" />
               <div className="contact-row">
                 <span>Call our team</span>
                 <a href="tel:08000142025">0800 014 2025</a>
@@ -544,33 +634,11 @@ export default function HomePage() {
                 <span>Opening hours</span>
                 <strong>Mon–Sat, 8am–8pm</strong>
               </div>
-              <button
-                className="contact-button"
-                onClick={() => {
-                  setDraft("I’d like to speak with a support specialist.");
-                }}
-              >
-                Get more support <span>→</span>
-              </button>
-            </div>
-            <div className="quick-help-card">
-              <div className="quick-help-header">
-                <span className="headset-icon">◉</span>
-                <div>
-                  <strong>Prefer a human?</strong>
-                  <span>We’re here for you, too.</span>
-                </div>
-              </div>
-              <div className="divider" />
-              <div className="contact-row">
-                <span>Call our team</span>
-                <a href="tel:08000142025">0800 014 2025</a>
-              </div>
-              <div className="contact-row">
-                <span>Opening hours</span>
-                <strong>Mon–Sat, 8am–8pm</strong>
-              </div>
-              <button
+              <Button
+                variant={
+                  humanRequestState === "requested" ? "secondary" : "outline"
+                }
+                size="default"
                 className={`contact-button${humanRequestState === "requested" ? " requested" : ""}`}
                 onClick={() => void requestHumanSupport()}
                 disabled={
@@ -585,11 +653,14 @@ export default function HomePage() {
                     ? "Sending request…"
                     : "Request a human"}
                 <span>{humanRequestState === "requested" ? "✓" : "→"}</span>
-              </button>
+              </Button>
               {humanRequestState === "error" && (
-                <div className="human-request-error">
-                  Couldn’t send your request. Please try again.
-                </div>
+                <Alert variant="destructive" className="human-request-error">
+                  <CircleHelp aria-hidden="true" />
+                  <AlertDescription>
+                    Couldn’t send your request. Please try again.
+                  </AlertDescription>
+                </Alert>
               )}
             </div>
             <div className="trust-note">
@@ -619,6 +690,48 @@ export default function HomePage() {
           </span>
         </footer>
       </section>
+      <AlertDialog
+        open={!!conversationToDelete}
+        onOpenChange={(open) => {
+          if (!open && !deletingConversationId) {
+            setConversationToDelete(null);
+            setDeleteError("");
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this conversation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes “
+              {conversationToDelete?.title || "New conversation"}” and all of
+              its messages.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {deleteError && (
+            <Alert variant="destructive">
+              <CircleHelp aria-hidden="true" />
+              <AlertDescription>{deleteError}</AlertDescription>
+            </Alert>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={!!deletingConversationId}>
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (conversationToDelete)
+                  void deleteConversation(conversationToDelete.id);
+              }}
+              disabled={!!deletingConversationId}
+            >
+              <Trash2 aria-hidden="true" />
+              {deletingConversationId ? "Deleting…" : "Delete conversation"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }
