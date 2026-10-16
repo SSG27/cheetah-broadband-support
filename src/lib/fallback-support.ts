@@ -13,7 +13,7 @@ export function fallbackSupport(message: string): string {
     return "For better Wi-Fi coverage, place your router in an open, central position away from thick walls and other electronics. Restarting it can also clear temporary issues. Tell me which devices or rooms are affected and I’ll help troubleshoot.";
   }
   if (/cancel|complaint|human|agent|person|support team/.test(text)) {
-    return "I can arrange for a Cheetah support specialist to help with that. Please use the secure contact option in My Account so the team can verify your details safely. You can also call us on 0800 014 2025, Monday to Saturday, 8am–8pm.";
+    return "I can arrange for a Cheetah support specialist to help with that. Please use the Request a human button. You can also call us on 0800 014 2025, Monday to Saturday, 8am–8pm.";
   }
   return "Thanks for getting in touch with Cheetah Broadband. I can help with Wi-Fi, connection speeds, service issues and general billing questions. Could you tell me a little more about what’s happening? For account-specific help, I can point you to a support specialist.";
 }

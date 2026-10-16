@@ -1,13 +1,7 @@
 "use client";
 
-import {
-  FormEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import useSWR from "swr";
 import {
   ArrowUp,
   CircleHelp,
@@ -37,6 +31,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { BrandMark } from "@/components/brand-mark";
+import { apiFetcher } from "@/lib/api-fetcher";
 
 type Message = {
   id: string;
@@ -76,13 +71,22 @@ const suggestions = [
 ];
 
 export default function HomePage() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const {
+    data: conversations = [],
+    error: conversationsError,
+    isLoading: conversationsLoading,
+    mutate: mutateConversations,
+  } = useSWR<Conversation[]>("/api/conversations", apiFetcher);
+  const { data: integrationStatus } = useSWR<{ status?: string }>(
+    "/api/integrations/openai",
+    apiFetcher,
+  );
   const [activeId, setActiveId] = useState("");
+  const currentActiveId = activeId || conversations[0]?.id || "";
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(false);
-  const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
-  const [aiConnected, setAiConnected] = useState<boolean | null>(null);
+  const [aiFallback, setAiFallback] = useState(false);
   const [humanRequestState, setHumanRequestState] = useState<
     "idle" | "pending" | "requested" | "error"
   >("idle");
@@ -90,46 +94,55 @@ export default function HomePage() {
   const [conversationToDelete, setConversationToDelete] =
     useState<Conversation | null>(null);
   const [deleteError, setDeleteError] = useState("");
+  const initialConversationStarted = useRef(false);
   const messagesContainer = useRef<HTMLDivElement>(null);
-  const activeConversation = conversations.find((item) => item.id === activeId);
+  const activeConversation = conversations.find(
+    (item) => item.id === currentActiveId,
+  );
   const messages = useMemo(
     () => activeConversation?.messages ?? [],
     [activeConversation?.messages],
   );
 
-  const loadConversations = useCallback(async () => {
-    try {
-      const response = await fetch("/api/conversations");
-      if (!response.ok) throw new Error("Unable to load conversations");
-      const data = (await response.json()) as Conversation[];
-      setConversations(data);
-      if (data.length) setActiveId((current) => current || data[0].id);
-      else {
-        const created = await fetch("/api/conversations", { method: "POST" });
-        if (!created.ok) throw new Error("Unable to start a conversation");
-        const conversation = (await created.json()) as Conversation;
-        setConversations([conversation]);
-        setActiveId(conversation.id);
-      }
-      setReady(true);
-    } catch (cause) {
-      console.error("[ui] conversation loading failed", cause);
-      setError(
-        "We couldn’t load your support chat. Refresh the page to try again.",
-      );
-    }
-  }, []);
-
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadConversations();
-    fetch("/api/integrations/openai")
-      .then((response) => response.json())
-      .then((data: { status?: string }) =>
-        setAiConnected(data.status === "connected"),
-      )
-      .catch(() => setAiConnected(false));
-  }, [loadConversations]);
+    if (
+      conversationsLoading ||
+      conversationsError ||
+      conversations.length ||
+      initialConversationStarted.current
+    )
+      return;
+    initialConversationStarted.current = true;
+    void fetch("/api/conversations", { method: "POST" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Unable to start a conversation");
+        return (await response.json()) as Conversation;
+      })
+      .then((conversation) => {
+        void mutateConversations([conversation], { revalidate: false });
+        setActiveId(conversation.id);
+      })
+      .catch((cause) => {
+        console.error("[ui] conversation loading failed", cause);
+        setError(
+          "We couldn’t load your support chat. Refresh the page to try again.",
+        );
+      });
+  }, [
+    conversationsLoading,
+    conversationsError,
+    conversations,
+    mutateConversations,
+  ]);
+
+  const aiConnected = integrationStatus?.status === "connected" && !aiFallback;
+  const ready =
+    !conversationsLoading && !conversationsError && conversations.length > 0;
+  const displayError =
+    error ||
+    (conversationsError
+      ? "We couldn’t load your support chat. Refresh the page to try again."
+      : "");
 
   useEffect(() => {
     const container = messagesContainer.current;
@@ -142,11 +155,11 @@ export default function HomePage() {
     setHumanRequestState(
       activeConversation?.humanRequested ? "requested" : "idle",
     );
-  }, [activeId, activeConversation?.humanRequested]);
+  }, [currentActiveId, activeConversation?.humanRequested]);
 
   async function requestHumanSupport() {
     if (
-      !activeId ||
+      !currentActiveId ||
       humanRequestState === "pending" ||
       humanRequestState === "requested"
     )
@@ -154,14 +167,18 @@ export default function HomePage() {
     setHumanRequestState("pending");
     try {
       const response = await fetch(
-        `/api/conversations/${activeId}/human-request`,
+        `/api/conversations/${currentActiveId}/human-request`,
         { method: "POST" },
       );
       if (!response.ok) throw new Error("Request failed");
-      setConversations((items) =>
-        items.map((item) =>
-          item.id === activeId ? { ...item, humanRequested: true } : item,
-        ),
+      await mutateConversations(
+        (items = []) =>
+          items.map((item) =>
+            item.id === currentActiveId
+              ? { ...item, humanRequested: true }
+              : item,
+          ),
+        { revalidate: false },
       );
       setHumanRequestState("requested");
     } catch (cause) {
@@ -176,7 +193,9 @@ export default function HomePage() {
       const response = await fetch("/api/conversations", { method: "POST" });
       if (!response.ok) throw new Error("Unable to create conversation");
       const conversation = (await response.json()) as Conversation;
-      setConversations((items) => [conversation, ...items]);
+      await mutateConversations((items = []) => [conversation, ...items], {
+        revalidate: false,
+      });
       setActiveId(conversation.id);
     } catch (cause) {
       console.error("[ui] conversation creation failed", cause);
@@ -185,7 +204,7 @@ export default function HomePage() {
   }
 
   async function deleteConversation(id: string) {
-    if (loading && id === activeId) return;
+    if (loading && id === currentActiveId) return;
     setDeletingConversationId(id);
     setDeleteError("");
     try {
@@ -193,8 +212,11 @@ export default function HomePage() {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Unable to delete this conversation");
-      setConversations((items) => items.filter((item) => item.id !== id));
-      if (activeId === id) {
+      await mutateConversations(
+        (items = []) => items.filter((item) => item.id !== id),
+        { revalidate: false },
+      );
+      if (currentActiveId === id) {
         const remaining = conversations.filter((item) => item.id !== id);
         if (remaining[0]) setActiveId(remaining[0].id);
         else {
@@ -214,7 +236,7 @@ export default function HomePage() {
   async function sendMessage(event?: FormEvent, suggestedText?: string) {
     event?.preventDefault();
     const content = (suggestedText ?? draft).trim();
-    if (!content || !activeId || loading) return;
+    if (!content || !currentActiveId || loading) return;
     setDraft("");
     setError("");
     setLoading(true);
@@ -225,51 +247,58 @@ export default function HomePage() {
       content,
       createdAt: new Date().toISOString(),
     };
-    setConversations((items) =>
-      items.map((item) =>
-        item.id === activeId
-          ? {
-              ...item,
-              title:
-                item.title === "New conversation"
-                  ? content.slice(0, 42)
-                  : item.title,
-              messages: [...item.messages, optimistic],
-            }
-          : item,
-      ),
-    );
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ conversationId: activeId, message: content }),
-      });
-      const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.error ?? "Message could not be sent");
-      setConversations((items) =>
+    await mutateConversations(
+      (items = []) =>
         items.map((item) =>
-          item.id === activeId
+          item.id === currentActiveId
             ? {
                 ...item,
                 title:
                   item.title === "New conversation"
                     ? content.slice(0, 42)
                     : item.title,
-                updatedAt: new Date().toISOString(),
-                messages: [
-                  ...item.messages.filter(
-                    (message) => message.id !== optimistic.id,
-                  ),
-                  data.userMessage,
-                  data.assistantMessage,
-                ],
+                messages: [...item.messages, optimistic],
               }
             : item,
         ),
+      { revalidate: false },
+    );
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conversationId: currentActiveId,
+          message: content,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error ?? "Message could not be sent");
+      await mutateConversations(
+        (items = []) =>
+          items.map((item) =>
+            item.id === currentActiveId
+              ? {
+                  ...item,
+                  title:
+                    item.title === "New conversation"
+                      ? content.slice(0, 42)
+                      : item.title,
+                  updatedAt: new Date().toISOString(),
+                  messages: [
+                    ...item.messages.filter(
+                      (message) => message.id !== optimistic.id,
+                    ),
+                    data.userMessage,
+                    data.assistantMessage,
+                  ],
+                }
+              : item,
+          ),
+        { revalidate: false },
       );
-      if (data.source === "fallback") setAiConnected(false);
+      if (data.source === "fallback") setAiFallback(true);
     } catch (cause) {
       console.error("[ui] message send failed", cause);
       setError(
@@ -277,17 +306,19 @@ export default function HomePage() {
           ? cause.message
           : "Your message could not be sent. Please try again.",
       );
-      setConversations((items) =>
-        items.map((item) =>
-          item.id === activeId
-            ? {
-                ...item,
-                messages: item.messages.filter(
-                  (message) => message.id !== optimistic.id,
-                ),
-              }
-            : item,
-        ),
+      await mutateConversations(
+        (items = []) =>
+          items.map((item) =>
+            item.id === currentActiveId
+              ? {
+                  ...item,
+                  messages: item.messages.filter(
+                    (message) => message.id !== optimistic.id,
+                  ),
+                }
+              : item,
+          ),
+        { revalidate: false },
       );
       setDraft(content);
     } finally {
@@ -330,7 +361,7 @@ export default function HomePage() {
           {conversations.map((conversation) => (
             <div className="conversation-item" key={conversation.id}>
               <button
-                className={`conversation-link${activeId === conversation.id ? " active" : ""}`}
+                className={`conversation-link${currentActiveId === conversation.id ? " active" : ""}`}
                 onClick={() => setActiveId(conversation.id)}
                 disabled={!!deletingConversationId}
               >
@@ -346,7 +377,7 @@ export default function HomePage() {
                 disabled={
                   !!conversationToDelete ||
                   deletingConversationId === conversation.id ||
-                  (loading && activeId === conversation.id)
+                  (loading && currentActiveId === conversation.id)
                 }
                 onClick={() => {
                   setDeleteError("");
@@ -551,10 +582,10 @@ export default function HomePage() {
                   </div>
                 </div>
               )}
-              {error && (
+              {displayError && (
                 <Alert variant="destructive" className="error-banner">
                   <CircleHelp aria-hidden="true" />
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription>{displayError}</AlertDescription>
                 </Alert>
               )}
               <form
