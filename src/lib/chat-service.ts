@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { fallbackSupport } from "@/lib/fallback-support";
 import { openAIReply, type ChatTurn } from "@/lib/ai-provider";
 import { detectSupportIntent } from "@/lib/intents";
+import { logger } from "@/lib/logger";
 
 export async function sendMessage(conversationId: string, content: string) {
   const intent = detectSupportIntent(content);
@@ -40,9 +41,9 @@ export async function sendMessage(conversationId: string, content: string) {
       answer = await openAIReply(history, {}, intent);
       source = "ai";
     } catch (error) {
-      console.warn(
-        "[chat] AI provider unavailable; using local support response",
-        error,
+      logger.warn(
+        { err: error },
+        "AI provider unavailable; using local support response",
       );
       answer = fallbackSupport(content);
     }
@@ -53,6 +54,6 @@ export async function sendMessage(conversationId: string, content: string) {
   const assistantMessage = await prisma.message.create({
     data: { role: "assistant", content: answer, conversationId },
   });
-  console.info("[chat] message handled", { conversationId, source });
+  logger.info({ conversationId, source }, "Chat message handled");
   return { userMessage, assistantMessage, source, intent };
 }

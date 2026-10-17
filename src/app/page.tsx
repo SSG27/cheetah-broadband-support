@@ -4,7 +4,9 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import useSWR from "swr";
 import {
   ArrowUp,
+  Check,
   CircleHelp,
+  Copy,
   Inbox,
   Plus,
   ShieldCheck,
@@ -84,6 +86,10 @@ export default function HomePage() {
   const [activeId, setActiveId] = useState("");
   const currentActiveId = activeId || conversations[0]?.id || "";
   const [draft, setDraft] = useState("");
+  const [copiedConversationId, setCopiedConversationId] = useState("");
+  const [copyIdError, setCopyIdError] = useState("");
+  const [copyIdErrorConversationId, setCopyIdErrorConversationId] =
+    useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [aiFallback, setAiFallback] = useState(false);
@@ -189,6 +195,9 @@ export default function HomePage() {
 
   async function newConversation() {
     setError("");
+    setCopyIdError("");
+    setCopyIdErrorConversationId("");
+    setCopiedConversationId("");
     try {
       const response = await fetch("/api/conversations", { method: "POST" });
       if (!response.ok) throw new Error("Unable to create conversation");
@@ -200,6 +209,20 @@ export default function HomePage() {
     } catch (cause) {
       console.error("[ui] conversation creation failed", cause);
       setError("We couldn’t start a new chat. Please try again.");
+    }
+  }
+
+  async function copyConversationId() {
+    if (!currentActiveId) return;
+    setCopyIdError("");
+    setCopyIdErrorConversationId("");
+    try {
+      await navigator.clipboard.writeText(currentActiveId);
+      setCopiedConversationId(currentActiveId);
+    } catch (cause) {
+      console.error("[ui] conversation ID copy failed", cause);
+      setCopyIdError("Couldn’t copy the ID. You can select and copy it.");
+      setCopyIdErrorConversationId(currentActiveId);
     }
   }
 
@@ -481,6 +504,33 @@ export default function HomePage() {
                     />
                     {aiConnected ? "AI POWERED" : "SUPPORT MODE"}
                   </Badge>
+                  {currentActiveId && (
+                    <div className="conversation-id">
+                      <span>Chat ID</span>
+                      <code title={currentActiveId}>{currentActiveId}</code>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label="Copy chat ID"
+                        title="Copy chat ID"
+                        onClick={() => void copyConversationId()}
+                      >
+                        {copiedConversationId === currentActiveId ? (
+                          <Check aria-hidden="true" />
+                        ) : (
+                          <Copy aria-hidden="true" />
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                  <span className="sr-only" aria-live="polite">
+                    {copiedConversationId === currentActiveId
+                      ? "Chat ID copied"
+                      : copyIdErrorConversationId === currentActiveId
+                        ? copyIdError
+                        : ""}
+                  </span>
                 </div>
               </div>
               <div className="messages-area" ref={messagesContainer}>

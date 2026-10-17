@@ -448,12 +448,14 @@ h1 span {
   min-height: 495px;
 }
 .chat-card-header {
-  height: 66px;
+  min-height: 66px;
   border-bottom: 1px solid #edf0ed;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  padding: 0 19px;
+  gap: 8px;
+  padding: 10px 19px;
 }
 .assistant-id {
   display: flex;
@@ -506,6 +508,27 @@ h1 span {
   letter-spacing: 1px;
   color: #7a8981;
   font-weight: 700;
+}
+.chat-card-header > div:last-child {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.conversation-id {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #7a8981;
+  font-size: 9px;
+}
+.conversation-id code {
+  max-width: 180px;
+  overflow: hidden;
+  color: #516159;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: all;
 }
 .provider-dot,
 .local-dot {
@@ -1101,6 +1124,9 @@ h1 span {
   }
   .chat-card {
     min-height: 470px;
+  }
+  .chat-card-header {
+    padding: 10px 13px;
   }
   .messages-area {
     padding: 17px 13px 5px;

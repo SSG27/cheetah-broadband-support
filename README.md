@@ -22,7 +22,7 @@ The app provides sample network status and support contact details for demonstra
 - `ChatService`, `OpenAIProvider`, and `FallbackSupport` separate orchestration, external AI communication, and local support responses.
 - The server uses asynchronous HTTP requests with a timeout and validates user input before persistence.
 - Conversations and messages are stored in SQLite through Prisma.
-- API routes handle errors centrally and emit concise console diagnostics. Do not log customer message contents or credentials.
+- API routes and the chat service use Pino for structured server-side logs. Set `LOG_LEVEL` to any Pino log level; it defaults to `debug` in development and `info` otherwise. Do not log customer message contents or credentials. Browser-side UI errors are reported through the browser console.
 - `/api/health` checks database connectivity; `/api/integrations/openai` checks the optional third-party AI connection.
 - GitHub Actions installs dependencies, generates Prisma, applies the schema, runs integration tests, lints, and builds.
 
@@ -32,7 +32,7 @@ Run `pnpm db:generate`, `pnpm db:push`, and `pnpm test:integration` after settin
 
 ## Deferred work
 
-Jest unit tests, Playwright end-to-end tests, 80% coverage target, logging library, Prettier configuration, and accessibility-focused visual refinements are intentionally not included yet.
+Jest unit tests, Playwright end-to-end tests, 80% coverage target, Prettier configuration, and accessibility-focused visual refinements are intentionally not included yet.
 
 ## Academic integrity
 
