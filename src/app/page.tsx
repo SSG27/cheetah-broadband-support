@@ -92,6 +92,7 @@ export default function HomePage() {
     useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [replyAnnouncement, setReplyAnnouncement] = useState("");
   const [aiFallback, setAiFallback] = useState(false);
   const [humanRequestState, setHumanRequestState] = useState<
     "idle" | "pending" | "requested" | "error"
@@ -262,6 +263,7 @@ export default function HomePage() {
     if (!content || !currentActiveId || loading) return;
     setDraft("");
     setError("");
+    setReplyAnnouncement("");
     setLoading(true);
     const optimistic: Message = {
       // eslint-disable-next-line react-hooks/purity
@@ -320,6 +322,9 @@ export default function HomePage() {
               : item,
           ),
         { revalidate: false },
+      );
+      setReplyAnnouncement(
+        `Cheetah Assistant replied: ${data.assistantMessage.content}`,
       );
       if (data.source === "fallback") setAiFallback(true);
     } catch (cause) {
@@ -533,7 +538,20 @@ export default function HomePage() {
                   </span>
                 </div>
               </div>
-              <div className="messages-area" ref={messagesContainer}>
+              <div
+                className="sr-only"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                {replyAnnouncement}
+              </div>
+              <div
+                className="messages-area"
+                ref={messagesContainer}
+                role="region"
+                aria-label="Conversation messages"
+              >
                 {!ready && (
                   <div className="loading-state">
                     <span className="spinner" /> Getting your support space
@@ -602,7 +620,7 @@ export default function HomePage() {
                         <BrandMark />
                       </AvatarFallback>
                     </Avatar>
-                    <div className="typing-indicator">
+                    <div className="typing-indicator" aria-hidden="true">
                       <span />
                       <span />
                       <span />
