@@ -25,7 +25,7 @@
   --primary-foreground: #fff;
   --secondary: #eaf4ee;
   --secondary-foreground: #0d6745;
-  --muted-foreground: #78847d;
+  --muted-foreground: #536258;
   --accent: #edf5ef;
   --accent-foreground: #0d6745;
   --destructive: oklch(0.577 0.245 27.325);
@@ -1014,28 +1014,53 @@ h1 span {
     width: 220px;
   }
 }
+@media (max-width: 950px) {
+  .work-area {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 690px;
+  }
+  .info-column {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 @media (max-width: 850px) {
   .sidebar {
     width: 68px;
     padding: 20px 9px;
+  }
+  .sidebar > .sidebar-label {
+    display: none;
   }
   .brand {
     padding: 0;
     justify-content: center;
     margin-bottom: 35px;
   }
-  .brand > div:last-child,
   .sidebar-label,
   .nav-item:not(.selected),
   .nav-item.selected {
     font-size: 0;
   }
+  .brand > div:last-child {
+    display: none;
+  }
   .nav-item {
     justify-content: center;
+    gap: 0;
     padding: 0;
   }
+  .nav-label {
+    display: none;
+  }
   .nav-icon {
-    font-size: 19px;
+    display: grid;
+    width: 100%;
+    place-items: center;
+  }
+  .nav-icon svg {
+    width: 19px;
+    height: 19px;
   }
   .sidebar-section,
   .conversation-list,
@@ -1839,7 +1864,6 @@ h1 span {
   }
   .admin-brand > div:last-child,
   .admin-nav-label,
-  .admin-nav-link:not(.active),
   .admin-sidebar-bottom {
     display: none;
   }
@@ -1849,7 +1873,8 @@ h1 span {
     padding: 0;
   }
   .admin-nav-link > svg {
-    font-size: 18px;
+    width: 18px;
+    height: 18px;
   }
   .admin-topbar {
     height: 55px;
@@ -2045,6 +2070,297 @@ h1 span {
 }
 .admin-priority-error {
   color: #a34f37 !important;
+}
+
+body {
+  font-size: 1rem;
+}
+
+.brand span,
+.sidebar-label,
+.conversation-link,
+.sidebar-empty,
+.support-hours,
+.hours,
+.profile strong,
+.profile span,
+.breadcrumbs,
+.secure-label,
+.eyebrow,
+.chat-heading p,
+.new-chat-button,
+.assistant-id strong,
+.assistant-id span,
+.powered,
+.message-time,
+.loading-state,
+.suggestion-label,
+.character-count,
+.privacy-note,
+.chat-footnote,
+.live-pill,
+.card-eyebrow,
+.connection-visual,
+.text-link,
+.quick-help-header strong,
+.quick-help-header span,
+.contact-row,
+.contact-row a,
+.contact-row strong,
+.contact-button,
+.trust-note p,
+.trust-note strong,
+.data-note,
+.page-footer,
+.admin-brand small,
+.admin-nav-label,
+.admin-nav-link,
+.admin-sidebar-bottom,
+.admin-demo-tag,
+.admin-breadcrumb,
+.admin-agent strong,
+.admin-agent small,
+.admin-eyebrow,
+.admin-page-heading p,
+.admin-heading-status,
+.admin-stat-label,
+.admin-stat-card > small,
+.admin-list-heading span,
+.admin-search input,
+.admin-search input::placeholder,
+.admin-search kbd,
+.admin-conversation-top strong,
+.admin-conversation-top time,
+.admin-conversation-preview,
+.admin-conversation-meta,
+.admin-empty,
+.admin-detail-person strong,
+.admin-detail-person small,
+.admin-detail-summary small,
+.admin-detail-summary strong,
+.admin-thread-date,
+.admin-message-label strong,
+.admin-message-label time,
+.admin-thread-empty,
+.admin-readonly-note,
+.admin-no-selection strong,
+.admin-no-selection p,
+.admin-back-button,
+.human-request-error,
+.human-request-badge,
+.admin-clear-priority,
+.admin-human-priority,
+.admin-human-alert strong,
+.admin-human-alert small {
+  font-size: 0.75rem;
+}
+
+.assistant-bubble,
+.user-bubble,
+.admin-message-bubble {
+  font-size: 1rem;
+}
+
+h1 {
+  font-size: 1.6875rem;
+}
+
+.connection-card h2 {
+  font-size: 1.125rem;
+}
+
+.admin-page-heading h1 {
+  font-size: 1.5625rem;
+}
+
+.admin-stat-card > strong {
+  font-size: 1.25rem;
+}
+
+.admin-stat-card > strong.admin-stat-date {
+  font-size: 1rem;
+}
+
+.profile-avatar,
+.user-avatar,
+.admin-agent-avatar,
+.admin-customer-avatar,
+.admin-customer-avatar.large {
+  font-size: 0.75rem;
+}
+
+.admin-conversation:nth-of-type(3n) .admin-customer-avatar {
+  color: #704d35;
+}
+
+.admin-conversation:nth-of-type(3n + 1) .admin-customer-avatar {
+  color: #484b70;
+}
+
+.composer input {
+  font-size: 0.875rem;
+  color: #344139;
+}
+
+.connection-card p,
+.error-banner,
+.admin-search input,
+.admin-empty {
+  font-size: 0.875rem;
+}
+
+.muted,
+.brand span,
+.sidebar-label,
+.conversation-link,
+.sidebar-empty,
+.support-hours,
+.hours,
+.profile span,
+.breadcrumbs,
+.secure-label,
+.eyebrow,
+.chat-heading p,
+.new-chat-button,
+.assistant-id span,
+.powered,
+.message-time,
+.loading-state,
+.suggestion-label,
+.character-count,
+.privacy-note,
+.chat-footnote,
+.live-pill,
+.card-eyebrow,
+.connection-card p,
+.connection-visual,
+.quick-help-header span,
+.contact-row,
+.trust-note,
+.data-note,
+.page-footer,
+.admin-brand small,
+.admin-nav-label,
+.admin-nav-link,
+.admin-sidebar-bottom,
+.admin-demo-tag,
+.admin-breadcrumb,
+.admin-agent small,
+.admin-eyebrow,
+.admin-page-heading p,
+.admin-heading-status,
+.admin-stat-label,
+.admin-stat-card > small,
+.admin-list-heading span,
+.admin-search,
+.admin-search input::placeholder,
+.admin-search kbd,
+.admin-conversation-top time,
+.admin-conversation-preview,
+.admin-conversation-meta,
+.admin-empty,
+.admin-detail-person small,
+.admin-detail-summary small,
+.admin-thread-date,
+.admin-message-label strong,
+.admin-message-label time,
+.admin-thread-empty,
+.admin-readonly-note,
+.admin-no-selection p,
+.admin-human-alert small {
+  color: #536258;
+}
+
+.composer input::placeholder,
+.admin-search input::placeholder {
+  color: #5b695f;
+  opacity: 1;
+}
+
+.privacy-note a,
+.data-note a {
+  color: #365b44;
+}
+
+.live-pill {
+  color: #286144;
+}
+
+.delete-conversation-button,
+.admin-search {
+  color: #536258;
+}
+
+.admin-human-alert {
+  color: #75513a;
+}
+
+.human-request-badge,
+.admin-human-priority {
+  color: #754525;
+}
+
+.topbar,
+.admin-topbar,
+.chat-card-header,
+.admin-list-heading,
+.admin-detail-header,
+.admin-readonly-note {
+  height: auto;
+  min-height: 3.5rem;
+}
+
+.composer {
+  height: auto;
+  min-height: 2.9375rem;
+  padding-block: 0.375rem;
+}
+
+.chat-heading {
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.page-footer {
+  flex-wrap: wrap;
+}
+
+.contact-row {
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+}
+
+.admin-stat-card {
+  height: auto;
+  min-height: 6.1875rem;
+  grid-template-rows: auto auto auto;
+}
+
+.admin-inbox {
+  min-height: 24.375rem;
+}
+
+.admin-detail-summary {
+  flex-wrap: wrap;
+  row-gap: 0.75rem;
+}
+
+.admin-conversation-top strong,
+.admin-conversation-top time,
+.admin-conversation-preview {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.admin-thread,
+.messages-area {
+  min-height: 0;
+}
+
+@media (max-width: 680px) {
+  .admin-nav-link {
+    font-size: 0;
+  }
 }
 
 @theme inline {

@@ -9,6 +9,7 @@ import {
   Plus,
   ShieldCheck,
   Trash2,
+  UserRound,
   Gauge,
   WifiIcon,
   GlobeOff,
@@ -338,13 +339,16 @@ export default function HomePage() {
         </div>
         <div className="sidebar-label">WORKSPACE</div>
         <button className="nav-item selected">
-          <span className="nav-icon">◌</span> Customer care
+          <span className="nav-icon">
+            <UserRound aria-hidden="true" />
+          </span>
+          <span className="nav-label">Customer care</span>
         </button>
         <a className="nav-item" href="/admin">
           <span className="nav-icon">
             <Inbox aria-hidden="true" />
-          </span>{" "}
-          Support inbox
+          </span>
+          <span className="nav-label">Support inbox</span>
         </a>
         <div className="sidebar-section">
           <span className="sidebar-label">RECENT CHATS</span>
