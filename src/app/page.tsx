@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import useSWR from "swr";
 import {
@@ -105,6 +106,7 @@ export default function HomePage() {
   const [deleteError, setDeleteError] = useState("");
   const initialConversationStarted = useRef(false);
   const messagesContainer = useRef<HTMLDivElement>(null);
+  const messageInput = useRef<HTMLInputElement>(null);
   const activeConversation = conversations.find(
     (item) => item.id === currentActiveId,
   );
@@ -360,6 +362,13 @@ export default function HomePage() {
 
   return (
     <main className="app-shell">
+      <a
+        className="skip-link"
+        href="#chat-message"
+        onClick={() => messageInput.current?.focus()}
+      >
+        Skip to chat
+      </a>
       <aside className="sidebar">
         <div className="brand">
           <BrandMark />
@@ -369,18 +378,25 @@ export default function HomePage() {
           </div>
         </div>
         <div className="sidebar-label">WORKSPACE</div>
-        <button className="nav-item selected">
-          <span className="nav-icon">
-            <UserRound aria-hidden="true" />
-          </span>
-          <span className="nav-label">Customer care</span>
-        </button>
-        <a className="nav-item" href="/admin">
-          <span className="nav-icon">
-            <Inbox aria-hidden="true" />
-          </span>
-          <span className="nav-label">Support inbox</span>
-        </a>
+        <nav className="workspace-nav" aria-label="Workspace">
+          <Link
+            className="nav-item selected"
+            href="/"
+            aria-current="page"
+            aria-label="Customer care"
+          >
+            <span className="nav-icon" aria-hidden="true">
+              <UserRound />
+            </span>{" "}
+            Customer care
+          </Link>
+          <Link className="nav-item" href="/admin" aria-label="Support inbox">
+            <span className="nav-icon">
+              <Inbox aria-hidden="true" />
+            </span>{" "}
+            Support inbox
+          </Link>
+        </nav>
         <div className="sidebar-section">
           <span className="sidebar-label">RECENT CHATS</span>
           <button
@@ -445,7 +461,7 @@ export default function HomePage() {
         </div>
       </aside>
 
-      <section className="main-area">
+      <section className="main-area" aria-label="Customer care chat">
         <header className="topbar">
           <div className="breadcrumbs">
             <span>Customer care</span>
@@ -674,6 +690,7 @@ export default function HomePage() {
                 </label>
                 <Input
                   id="chat-message"
+                  ref={messageInput}
                   className="composer-input"
                   value={draft}
                   onChange={(event) => {
