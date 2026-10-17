@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
   try {
@@ -9,7 +10,7 @@ export async function GET() {
     });
     return NextResponse.json(conversations);
   } catch (error) {
-    console.error("[api/conversations] failed to load", error);
+    logger.error({ err: error }, "Failed to load conversations");
     return NextResponse.json(
       { error: "Unable to load conversations" },
       { status: 500 },
@@ -23,12 +24,10 @@ export async function POST() {
       data: {},
       include: { messages: true },
     });
-    console.info("[api/conversations] created", {
-      conversationId: conversation.id,
-    });
+    logger.info({ conversationId: conversation.id }, "Conversation created");
     return NextResponse.json(conversation, { status: 201 });
   } catch (error) {
-    console.error("[api/conversations] failed to create", error);
+    logger.error({ err: error }, "Failed to create conversation");
     return NextResponse.json(
       { error: "Unable to create conversation" },
       { status: 500 },

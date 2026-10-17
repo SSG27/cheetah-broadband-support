@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 export async function PATCH(
   _request: NextRequest,
@@ -25,10 +26,10 @@ export async function PATCH(
         { status: 404 },
       );
     }
-    console.error("[api/conversations/priority] failed to clear priority", {
-      id,
-      error,
-    });
+    logger.error(
+      { conversationId: id, err: error },
+      "Failed to clear conversation priority",
+    );
     return NextResponse.json(
       { error: "Unable to clear conversation priority" },
       { status: 500 },

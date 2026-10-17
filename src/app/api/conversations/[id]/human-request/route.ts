@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 export async function POST(
   _request: NextRequest,
@@ -23,7 +24,10 @@ export async function POST(
         { status: 404 },
       );
     }
-    console.error("[api/conversations/human-request] failed", error);
+    logger.error(
+      { conversationId: id, err: error },
+      "Failed to request a support agent",
+    );
     return NextResponse.json(
       { error: "Unable to request a support agent" },
       { status: 500 },

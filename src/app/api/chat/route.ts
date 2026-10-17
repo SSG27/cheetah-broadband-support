@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendMessage } from "@/lib/chat-service";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && error.message === "Conversation not found") {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
-    console.error("[api/chat] request failed", error);
+    logger.error({ err: error }, "Chat request failed");
     return NextResponse.json(
       { error: "We couldn’t process that message. Please try again." },
       { status: 500 },
