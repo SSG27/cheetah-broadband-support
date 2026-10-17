@@ -1,10 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { getUserFromToken, COOKIE_NAME } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const token = request.cookies.get(COOKIE_NAME)?.value;
+    const user = await getUserFromToken(token);
+
+    const where = user ? { userId: user.id } : {};
+
     const conversations = await prisma.conversation.findMany({
+      where,
       orderBy: [{ humanRequested: "desc" }, { updatedAt: "desc" }],
       include: { messages: { orderBy: { createdAt: "asc" } } },
     });
@@ -18,10 +25,13 @@ export async function GET() {
   }
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    const token = request.cookies.get(COOKIE_NAME)?.value;
+    const user = await getUserFromToken(token);
+
     const conversation = await prisma.conversation.create({
-      data: {},
+      data: { ...(user ? { userId: user.id } : {}) },
       include: { messages: true },
     });
     logger.info({ conversationId: conversation.id }, "Conversation created");
