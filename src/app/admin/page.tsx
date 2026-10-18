@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import useSWR from "swr";
 import {
   ArrowLeft,
+  BellRing,
   FlagOff,
   Inbox,
   MessageSquareText,
@@ -68,12 +69,16 @@ export default function AdminPage() {
     error,
     isLoading: loading,
     mutate: mutateConversations,
-  } = useSWR<Conversation[]>("/api/conversations", apiFetcher);
+  } = useSWR<Conversation[]>("/api/conversations", apiFetcher, {
+    refreshInterval: 15_000,
+    revalidateOnFocus: true,
+  });
   const [selectedId, setSelectedId] = useState("");
   const [showDetail, setShowDetail] = useState(false);
   const [query, setQuery] = useState("");
   const [priorityUpdatingId, setPriorityUpdatingId] = useState("");
   const [priorityError, setPriorityError] = useState("");
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const loadError = error
     ? "We couldn’t load conversations. Please refresh to try again."
@@ -107,7 +112,6 @@ export default function AdminPage() {
   const humanRequestCount = conversations.filter(
     (conversation) => conversation.humanRequested,
   ).length;
-
   async function clearPriority(id: string) {
     setPriorityUpdatingId(id);
     setPriorityError("");
@@ -175,6 +179,78 @@ export default function AdminPage() {
             <Avatar className="admin-agent-avatar">
               <AvatarFallback className="bg-transparent">S</AvatarFallback>
             </Avatar>
+            <div className="admin-notification-wrap">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="admin-notification-trigger"
+                aria-label={`Notifications: ${humanRequestCount} ${humanRequestCount === 1 ? "conversation needs" : "conversations need"} a human response`}
+                aria-expanded={notificationsOpen}
+                aria-controls="admin-notification-menu"
+                onClick={() => setNotificationsOpen((open) => !open)}
+              >
+                <BellRing aria-hidden="true" />
+                {humanRequestCount > 0 && (
+                  <span className="admin-notification-count" aria-hidden="true">
+                    {humanRequestCount > 99 ? "99+" : humanRequestCount}
+                  </span>
+                )}
+              </Button>
+              {notificationsOpen && (
+                <div
+                  id="admin-notification-menu"
+                  className="admin-notification-menu"
+                  role="region"
+                  aria-label="Human support notifications"
+                >
+                  <div className="admin-notification-menu-heading">
+                    <strong>Notifications</strong>
+                    <span>{humanRequestCount} needs attention</span>
+                  </div>
+                  {humanRequestCount > 0 ? (
+                    <ul>
+                      {conversations
+                        .filter((conversation) => conversation.humanRequested)
+                        .map((conversation) => {
+                          const latest = conversation.messages.at(-1);
+                          return (
+                            <li key={conversation.id}>
+                              <button
+                                type="button"
+                                className="admin-notification-item"
+                                onClick={() => {
+                                  setSelectedId(conversation.id);
+                                  setShowDetail(true);
+                                  setNotificationsOpen(false);
+                                }}
+                              >
+                                <span className="admin-notification-item-icon">
+                                  <UserRound aria-hidden="true" />
+                                </span>
+                                <span className="admin-notification-item-copy">
+                                  <strong>
+                                    {conversation.title || "New conversation"}
+                                  </strong>
+                                  <small>
+                                    {latest?.content || "Customer requested human support"}
+                                  </small>
+                                  <small className="admin-notification-item-time">
+                                    {formatTime(conversation.updatedAt)}
+                                  </small>
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                    </ul>
+                  ) : (
+                    <p className="admin-notification-empty">
+                      No conversations need a human response.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
             <span>
               <strong>Support agent</strong>
               <small>Agent workspace</small>
