@@ -115,6 +115,31 @@ export default function HomePage() {
     [activeConversation?.messages],
   );
 
+  // current authenticated user (fetched from server cookie)
+  const [currentUser, setCurrentUser] = useState<{
+    id: string;
+    email: string;
+    name?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    void fetch("/api/auth/user")
+      .then(async (r) => {
+        if (!r.ok) return null;
+        return (await r.json()) as { id: string; email: string; name?: string };
+      })
+      .then((data) => {
+        if (mounted) setCurrentUser(data);
+      })
+      .catch(() => {
+        /* ignore */
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   useEffect(() => {
     if (
       conversationsLoading ||
@@ -450,14 +475,6 @@ export default function HomePage() {
             <span className="green-dot" /> Support online{" "}
             <span className="hours">8am – 8pm</span>
           </div>
-          <div className="profile">
-            <div className="profile-avatar">C</div>
-            <div>
-              <strong>Cheetah customer</strong>
-              <span>Broadband home plan</span>
-            </div>
-            <span className="profile-menu">···</span>
-          </div>
         </div>
       </aside>
 
@@ -469,6 +486,48 @@ export default function HomePage() {
             <strong>AI support assistant</strong>
           </div>
           <div className="topbar-right">
+            <div className="topbar-profile">
+              {currentUser ? (
+                <>
+                  <div className="profile-avatar small">
+                    {currentUser.name
+                      ? currentUser.name[0].toUpperCase()
+                      : currentUser.email[0].toUpperCase()}
+                  </div>
+                  <div className="topbar-profile-copy signed-in">
+                    <strong>{currentUser.name ?? currentUser.email}</strong>
+                    <span>
+                      <button
+                        className="profile-menu"
+                        onClick={async () => {
+                          await fetch("/api/auth/logout", { method: "POST" });
+                          setCurrentUser(null);
+                          window.location.href = "/";
+                        }}
+                      >
+                        Sign out
+                      </button>
+                      {" · "}
+                      <a href="/settings" className="profile-settings-link">
+                        Settings
+                      </a>
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="profile-avatar small">C</div>
+                  <div className="topbar-profile-copy">
+                    <strong>Guest</strong>
+                    <span>
+                      <a href="/login">Sign in</a>
+                      {" · "}
+                      <a href="/register">Register</a>
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
             <div className="secure-label">
               <ShieldCheck aria-hidden="true" /> Secure conversation
             </div>

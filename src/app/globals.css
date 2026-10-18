@@ -327,8 +327,147 @@ a {
 }
 .profile-menu {
   margin-left: auto;
-  font-size: 18px !important;
+  font-size: 18px;
   letter-spacing: 1px;
+}
+button.profile-menu,
+.profile-settings-link {
+  margin-left: 0;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--green-dark);
+  cursor: pointer;
+  text-decoration: none;
+  line-height: 1.2;
+}
+.profile-settings-link {
+  color: var(--green-dark);
+}
+.profile-actions {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+.profile-actions a {
+  color: var(--green-dark);
+  font-size: 10px;
+  font-weight: 700;
+}
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+  background: var(--canvas);
+}
+.settings-card {
+  width: min(520px, 100%);
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 26px;
+  box-shadow: 0 10px 30px rgba(32, 43, 40, 0.04);
+}
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.settings-header h1 {
+  margin: 4px 0 0;
+}
+.eyebrow {
+  margin: 0;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  color: #7b8a82;
+  text-transform: uppercase;
+}
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.auth-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #43524d;
+  font-weight: 600;
+  font-size: 12px;
+}
+.auth-form input {
+  border: 1px solid var(--line);
+  background: #f8faf8;
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--ink);
+}
+.auth-form input:focus {
+  outline: 2px solid rgba(24, 123, 85, 0.12);
+  border-color: var(--green);
+}
+.auth-form button,
+.secondary-button,
+.secondary-link,
+.auth-actions a,
+.auth-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.auth-form button,
+.secondary-button,
+.auth-actions button {
+  border: 0;
+  background: var(--green);
+  color: var(--white);
+  padding: 11px 16px;
+}
+.secondary-button {
+  background: #edf5ef;
+  color: var(--green-dark);
+}
+.auth-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.secondary-link,
+.auth-actions a {
+  color: var(--green-dark);
+  background: transparent;
+  padding: 8px 0;
+  font-size: 12px;
+}
+.error,
+.success {
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.error {
+  background: #fff2f2;
+  color: #b14d4d;
+  border: 1px solid #f7c9c9;
+}
+.success {
+  background: #eefaf3;
+  color: #1e7f5a;
+  border: 1px solid #cfead9;
 }
 .main-area {
   min-width: 0;
@@ -362,7 +501,71 @@ a {
 .topbar-right {
   display: flex;
   align-items: center;
-  gap: 21px;
+  gap: 18px;
+}
+.topbar-profile {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 10px 6px 8px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(25, 36, 31, 0.04);
+}
+.topbar-profile-copy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.2;
+}
+.topbar-profile-copy strong {
+  font-size: 12px;
+  color: #24332f;
+  font-weight: 700;
+}
+.topbar-profile-copy span {
+  font-size: 10px;
+  color: var(--green-dark);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.topbar-profile-copy a,
+.topbar-profile-copy button {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 7px;
+  color: var(--green-dark);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  transition: background-color 0.15s ease;
+}
+.topbar-profile-copy a:hover,
+.topbar-profile-copy button:hover,
+.topbar-profile-copy a:focus-visible,
+.topbar-profile-copy button:focus-visible {
+  background: var(--green-pale);
+}
+.topbar-profile-copy button {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.profile-settings-link {
+  background: transparent;
+  color: var(--green-dark);
+  font-size: 10px;
+  font-weight: 600;
+}
+.profile-avatar.small {
+  width: 26px;
+  height: 26px;
+  font-size: 10px;
+  background: #e4efe7;
+  color: #28694c;
 }
 .secure-label {
   font-size: 10px;
