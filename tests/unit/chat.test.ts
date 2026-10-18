@@ -64,9 +64,12 @@ describe("OpenAIProvider", () => {
       options,
     );
 
-    expect(reply).toBe("Try restarting your router.");
+    expect(reply).toEqual({
+      answer: "Try restarting your router.",
+      humanEscalationRequested: false,
+    });
     expect(fakeFetch).toHaveBeenCalledTimes(1);
-    expect(fakeFetch.mock.calls[0][0]).toBe(
+    expect(String(fakeFetch.mock.calls[0][0])).toBe(
       "https://api.openai.com/v1/chat/completions",
     );
   });

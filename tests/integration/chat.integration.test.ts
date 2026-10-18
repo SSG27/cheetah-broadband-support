@@ -125,7 +125,10 @@ test("AI integration sends authenticated requests and parses provider replies", 
   };
 
   const reply = await openAIReply(history, options);
-  assert.equal(reply, "Try restarting your router.");
+  assert.deepEqual(reply, {
+    answer: "Try restarting your router.",
+    humanEscalationRequested: false,
+  });
   assert.equal(target, "https://api.openai.com/v1/chat/completions");
   assert.equal(authorization, "Bearer test-key");
 });
