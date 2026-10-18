@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "./prisma";
+import { logger } from "./logger";
 
 const JWT_SECRET = process.env.SESSION_SECRET || "dev-secret";
 const COOKIE_NAME = "session";
@@ -25,6 +26,7 @@ export function verifyToken(token: string) {
       exp: number;
     };
   } catch (e) {
+    logger.error({ err: e }, "Failed to verify token");
     return null;
   }
 }

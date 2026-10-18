@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { BrandMark } from "@/components/brand-mark";
 import { apiFetcher } from "@/lib/api-fetcher";
+import { redirect } from "next/navigation";
 
 type Message = {
   id: string;
@@ -502,7 +503,7 @@ export default function HomePage() {
                         onClick={async () => {
                           await fetch("/api/auth/logout", { method: "POST" });
                           setCurrentUser(null);
-                          window.location.href = "/";
+                          redirect("/");
                         }}
                       >
                         Sign out
