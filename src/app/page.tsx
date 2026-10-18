@@ -91,6 +91,7 @@ export default function HomePage() {
   const [copyIdErrorConversationId, setCopyIdErrorConversationId] =
     useState("");
   const [loading, setLoading] = useState(false);
+  const [messageError, setMessageError] = useState("");
   const [error, setError] = useState("");
   const [replyAnnouncement, setReplyAnnouncement] = useState("");
   const [aiFallback, setAiFallback] = useState(false);
@@ -147,6 +148,7 @@ export default function HomePage() {
     !conversationsLoading && !conversationsError && conversations.length > 0;
   const displayError =
     error ||
+    messageError ||
     (conversationsError
       ? "We couldn’t load your support chat. Refresh the page to try again."
       : "");
@@ -262,6 +264,7 @@ export default function HomePage() {
     const content = (suggestedText ?? draft).trim();
     if (!content || !currentActiveId || loading) return;
     setDraft("");
+    setMessageError("");
     setError("");
     setReplyAnnouncement("");
     setLoading(true);
@@ -329,7 +332,7 @@ export default function HomePage() {
       if (data.source === "fallback") setAiFallback(true);
     } catch (cause) {
       console.error("[ui] message send failed", cause);
-      setError(
+      setMessageError(
         cause instanceof Error
           ? cause.message
           : "Your message could not be sent. Please try again.",
@@ -653,22 +656,38 @@ export default function HomePage() {
               {displayError && (
                 <Alert variant="destructive" className="error-banner">
                   <CircleHelp aria-hidden="true" />
-                  <AlertDescription>{displayError}</AlertDescription>
+                  <AlertDescription id="chat-message-error">
+                    {displayError}
+                  </AlertDescription>
                 </Alert>
               )}
               <form
                 className="composer"
                 onSubmit={(event) => void sendMessage(event)}
               >
+                <label className="sr-only" htmlFor="chat-message">
+                  Message
+                </label>
                 <Input
+                  id="chat-message"
                   className="composer-input"
                   value={draft}
-                  onChange={(event) => setDraft(event.target.value)}
+                  onChange={(event) => {
+                    setDraft(event.target.value);
+                    setMessageError("");
+                  }}
                   placeholder="Ask us anything about your broadband…"
                   maxLength={1000}
                   disabled={!ready || loading}
+                  aria-describedby={`chat-message-count${messageError ? " chat-message-error" : ""}`}
+                  aria-invalid={!!messageError}
                 />
-                <span className="character-count">{draft.length}/1000</span>
+                <span className="character-count" aria-hidden="true">
+                  {draft.length}/1000
+                </span>
+                <span className="sr-only" id="chat-message-count">
+                  {draft.length} of 1000 characters used.
+                </span>
                 <Button
                   variant="default"
                   size="icon"
