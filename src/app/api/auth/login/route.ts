@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword, signToken, COOKIE_NAME } from "@/lib/auth";
+import { isAdminEmail } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,6 +38,8 @@ export async function POST(request: NextRequest) {
       id: user.id,
       email: user.email,
       name: user.name,
+      role:
+        user.role === "ADMIN" || isAdminEmail(user.email) ? "ADMIN" : "USER",
     });
     res.cookies.set({
       name: COOKIE_NAME,

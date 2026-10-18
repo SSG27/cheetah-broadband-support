@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
       id: user.id,
       email: user.email,
       name: user.name,
+      role: user.role,
     });
   } catch (error) {
     console.error("[api/auth/user]", error);
@@ -44,6 +45,7 @@ export async function PUT(request: NextRequest) {
       id: updated.id,
       email: updated.email,
       name: updated.name,
+      role: updated.role,
     });
   } catch (error) {
     console.error("[api/auth/user] update failed", error);

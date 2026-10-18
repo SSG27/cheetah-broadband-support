@@ -121,6 +121,7 @@ export default function HomePage() {
     id: string;
     email: string;
     name?: string;
+    role?: string;
   } | null>(null);
 
   useEffect(() => {
@@ -128,7 +129,12 @@ export default function HomePage() {
     void fetch("/api/auth/user")
       .then(async (r) => {
         if (!r.ok) return null;
-        return (await r.json()) as { id: string; email: string; name?: string };
+        return (await r.json()) as {
+          id: string;
+          email: string;
+          name?: string;
+          role?: string;
+        };
       })
       .then((data) => {
         if (mounted) setCurrentUser(data);
@@ -416,12 +422,14 @@ export default function HomePage() {
             </span>{" "}
             Customer care
           </Link>
-          <Link className="nav-item" href="/admin" aria-label="Support inbox">
-            <span className="nav-icon">
-              <Inbox aria-hidden="true" />
-            </span>{" "}
-            Support inbox
-          </Link>
+          {currentUser?.role === "ADMIN" && (
+            <Link className="nav-item" href="/admin" aria-label="Support inbox">
+              <span className="nav-icon">
+                <Inbox aria-hidden="true" />
+              </span>{" "}
+              Support inbox
+            </Link>
+          )}
         </nav>
         <div className="sidebar-section">
           <span className="sidebar-label">RECENT CHATS</span>

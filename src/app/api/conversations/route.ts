@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
-import { getUserFromToken, COOKIE_NAME } from "@/lib/auth";
+import { getUserFromToken, COOKIE_NAME, isAdmin } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get(COOKIE_NAME)?.value;
     const user = await getUserFromToken(token);
 
-    const where = user ? { userId: user.id } : {};
+    const where = isAdmin(user) ? {} : { userId: user?.id ?? null };
 
     const conversations = await prisma.conversation.findMany({
       where,
