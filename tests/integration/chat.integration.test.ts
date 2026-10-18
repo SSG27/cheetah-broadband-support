@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
+import { NextRequest } from "next/server";
 import { prisma } from "../../src/lib/prisma";
 import { sendMessage } from "../../src/lib/chat-service";
+import { POST as submitFeedback } from "../../src/app/api/conversations/[id]/feedback/route";
+import { POST as endConversation } from "../../src/app/api/conversations/[id]/end/route";
 import {
   AIProviderOptions,
   ChatTurn,
@@ -33,6 +36,69 @@ test("chat service persists a customer and support reply through Prisma", async 
     where: { conversationId: conversation.id },
   });
   assert.equal(stored.length, 2);
+});
+
+test("customers can submit feedback after an assistant reply", async () => {
+  const conversation = await prisma.conversation.create({ data: {} });
+  const makeRequest = (body: unknown) =>
+    new NextRequest("http://localhost/api/conversations/feedback/feedback", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  const context = { params: Promise.resolve({ id: conversation.id }) };
+
+  const tooEarly = await submitFeedback(makeRequest({ rating: 5 }), context);
+  assert.equal(tooEarly.status, 409);
+
+  const invalidRating = await submitFeedback(
+    makeRequest({ rating: 6 }),
+    context,
+  );
+  assert.equal(invalidRating.status, 400);
+
+  await sendMessage(conversation.id, "My Wi-Fi is slow");
+  const response = await submitFeedback(
+    makeRequest({ rating: 4, comment: "Thanks for the advice" }),
+    context,
+  );
+  assert.equal(response.status, 200);
+
+  const updated = await prisma.conversation.findUniqueOrThrow({
+    where: { id: conversation.id },
+  });
+  assert.equal(updated.feedbackRating, 4);
+  assert.equal(updated.feedbackComment, "Thanks for the advice");
+  assert.ok(updated.feedbackSubmittedAt);
+});
+
+test("customers can end a conversation after the assistant responds", async () => {
+  const conversation = await prisma.conversation.create({ data: {} });
+  const context = { params: Promise.resolve({ id: conversation.id }) };
+  const request = () =>
+    new NextRequest(
+      `http://localhost/api/conversations/${conversation.id}/end`,
+      {
+        method: "POST",
+      },
+    );
+
+  const tooEarly = await endConversation(request(), context);
+  assert.equal(tooEarly.status, 409);
+
+  await sendMessage(conversation.id, "My Wi-Fi is slow");
+  const response = await endConversation(request(), context);
+  assert.equal(response.status, 200);
+  const ended = await response.json();
+  assert.ok(ended.endedAt);
+
+  const repeatedEnd = await endConversation(request(), context);
+  assert.equal(repeatedEnd.status, 200);
+  assert.equal((await repeatedEnd.json()).endedAt, ended.endedAt);
+
+  await assert.rejects(
+    sendMessage(conversation.id, "I have another question"),
+    { message: "Conversation has ended" },
+  );
 });
 
 test("AI integration sends authenticated requests and parses provider replies", async () => {

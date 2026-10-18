@@ -23,6 +23,9 @@ The app provides sample network status and support contact details for demonstra
 - The server uses asynchronous HTTP requests with a timeout and validates user input before persistence.
 - Conversations and messages are stored in SQLite through Prisma.
 - API routes and the chat service use Pino for structured server-side logs. Set `LOG_LEVEL` to any Pino log level; it defaults to `debug` in development and `info` otherwise. Do not log customer message contents or credentials. Browser-side UI errors are reported through the browser console.
+- Customers can rate a conversation and leave an optional comment after the assistant replies; support staff can review submitted feedback in the conversation inbox.
+- Customers can end a conversation after an assistant response; ended conversations stay available in the inbox but can no longer receive new messages.
+- API routes handle errors centrally and emit concise console diagnostics. Do not log customer message contents or credentials.
 - `/api/health` checks database connectivity; `/api/integrations/openai` checks the optional third-party AI connection.
 - GitHub Actions installs dependencies, generates Prisma, applies the schema, runs integration tests, lints, and builds.
 

@@ -14,7 +14,11 @@ export async function POST(
   try {
     const conversation = await prisma.conversation.findUnique({
       where: { id },
-      select: { id: true, userId: true },
+      select: {
+        id: true,
+        userId: true,
+        endedAt: true,
+      },
     });
 
     if (!conversation) {
@@ -35,6 +39,13 @@ export async function POST(
       return NextResponse.json(
         { error: "You can only request support for your own conversations" },
         { status: 403 },
+      );
+    }
+
+    if (conversation.endedAt) {
+      return NextResponse.json(
+        { error: "This conversation has ended" },
+        { status: 409 },
       );
     }
 

@@ -8,24 +8,28 @@ datasource db {
 }
 
 model User {
-  id          String         @id @default(cuid())
-  email       String         @unique
-  name        String?
-  password    String
-  role        String         @default("USER")
-  createdAt   DateTime       @default(now())
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String?
+  password      String
+  role          String         @default("USER")
+  createdAt     DateTime       @default(now())
   conversations Conversation[]
 }
 
 model Conversation {
-  id        String    @id @default(cuid())
-  title     String    @default("New conversation")
-  humanRequested Boolean @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  messages  Message[]
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id])
+  id                  String    @id @default(cuid())
+  title               String    @default("New conversation")
+  humanRequested      Boolean   @default(false)
+  feedbackRating      Int?
+  feedbackComment     String?
+  feedbackSubmittedAt DateTime?
+  endedAt             DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  messages            Message[]
+  userId              String?
+  user                User?     @relation(fields: [userId], references: [id])
 
   @@index([userId, updatedAt])
 }

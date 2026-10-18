@@ -37,6 +37,10 @@ type Conversation = {
   createdAt: string;
   updatedAt: string;
   humanRequested: boolean;
+  feedbackRating: number | null;
+  feedbackComment: string | null;
+  feedbackSubmittedAt: string | null;
+  endedAt: string | null;
   messages: Message[];
 };
 
@@ -386,6 +390,11 @@ export default function AdminPage() {
                             {latest?.content || "No messages yet"}
                           </span>
                           <span className="admin-conversation-meta">
+                            {conversation.endedAt && (
+                              <Badge variant="secondary" className="ended-conversation-badge">
+                                Ended
+                              </Badge>
+                            )}
                             {conversation.humanRequested ? (
                               <Badge
                                 variant="secondary"
@@ -464,6 +473,11 @@ export default function AdminPage() {
                       <strong>{selected.messages.length}</strong>
                     </span>
                   </div>
+                  {selected.endedAt && (
+                    <div className="admin-ended-notice">
+                      Customer ended this conversation {formatTime(selected.endedAt)}.
+                    </div>
+                  )}
                   {selected.humanRequested && (
                     <Alert className="admin-human-alert">
                       <span>◉</span>
@@ -498,6 +512,24 @@ export default function AdminPage() {
                           : "Clear priority"}
                       </Button>
                     </Alert>
+                  )}
+                  {selected.feedbackRating !== null && selected.feedbackSubmittedAt && (
+                    <div className="admin-customer-feedback">
+                      <div className="admin-customer-feedback-heading">
+                        <strong>Customer feedback</strong>
+                        <span>
+                          {selected.feedbackRating} out of 5 · {formatTime(selected.feedbackSubmittedAt)}
+                        </span>
+                      </div>
+                      <div
+                        className="admin-customer-feedback-stars"
+                        aria-label={`${selected.feedbackRating} out of 5 stars`}
+                      >
+                        {"★".repeat(selected.feedbackRating)}
+                        {"☆".repeat(5 - selected.feedbackRating)}
+                      </div>
+                      {selected.feedbackComment && <p>{selected.feedbackComment}</p>}
+                    </div>
                   )}
                   <div className="admin-thread">
                     <div className="admin-thread-date">
