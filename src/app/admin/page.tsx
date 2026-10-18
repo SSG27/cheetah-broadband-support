@@ -232,7 +232,8 @@ export default function AdminPage() {
                                     {conversation.title || "New conversation"}
                                   </strong>
                                   <small>
-                                    {latest?.content || "Customer requested human support"}
+                                    {latest?.content ||
+                                      "Customer requested human support"}
                                   </small>
                                   <small className="admin-notification-item-time">
                                     {formatTime(conversation.updatedAt)}
