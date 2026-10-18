@@ -166,6 +166,9 @@ importers:
       pino:
         specifier: ^10.4.0
         version: 10.4.0
+      openai:
+        specifier: ^7.34.0
+        version: 7.34.0(undici@7.30.0)(zod@3.25.76)
       postcss:
         specifier: ^8.5.30
         version: 8.5.30
@@ -5672,6 +5675,33 @@ packages:
       }
     engines: { node: ">=12" }
 
+  openai@7.34.0:
+    resolution:
+      {
+        integrity: sha512-PMwuTQ/3cVyWZJOVpb6bzlrQj17uImlnUGQWqh5zHlN/snwK5ww4ZUHW8NYGtH6f9PQOEPxyD/f8WJVIHp1q2A==,
+      }
+    engines: { node: ">=22.0.0" }
+    peerDependencies:
+      '@aws-sdk/credential-provider-node': ">=3.972.0 <4"
+      '@smithy/hash-node': ">=4.3.0 <5"
+      '@smithy/signature-v4': ">=5.4.0 <6"
+      undici: ">=5 <9"
+      ws: ^8.21.0
+      zod: ^3.25 || ^4.0
+    peerDependenciesMeta:
+      '@aws-sdk/credential-provider-node':
+        optional: true
+      '@smithy/hash-node':
+        optional: true
+      '@smithy/signature-v4':
+        optional: true
+      undici:
+        optional: true
+      ws:
+        optional: true
+      zod:
+        optional: true
+
   optionator@0.9.4:
     resolution:
       {
@@ -10768,6 +10798,11 @@ snapshots:
       define-lazy-prop: 2.0.0
       is-docker: 2.2.1
       is-wsl: 2.2.0
+
+  openai@7.34.0(undici@7.30.0)(zod@3.25.76):
+    optionalDependencies:
+      undici: 7.30.0
+      zod: 3.25.76
 
   optionator@0.9.4:
     dependencies:

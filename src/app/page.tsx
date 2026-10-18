@@ -327,9 +327,11 @@ export default function HomePage() {
         { revalidate: false },
       );
       setHumanRequestState("requested");
+      return true;
     } catch (cause) {
       console.error("[ui] human support request failed", cause);
       setHumanRequestState("error");
+      return false;
     }
   }
 
@@ -467,6 +469,7 @@ export default function HomePage() {
       setReplyAnnouncement(
         `Cheetah Assistant replied: ${data.assistantMessage.content}`,
       );
+      if (data.humanEscalationRequested) await requestHumanSupport();
       if (data.source === "fallback") setAiFallback(true);
     } catch (cause) {
       console.error("[ui] message send failed", cause);
