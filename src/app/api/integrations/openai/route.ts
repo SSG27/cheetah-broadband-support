@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkAIConnection } from "@/lib/ai-provider";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
   if (!process.env.OPENAI_API_KEY) {
@@ -10,9 +11,12 @@ export async function GET() {
     await checkAIConnection();
     return NextResponse.json({ status: "connected", provider: "OpenAI" });
   } catch (error) {
-    console.error("[api/integrations/openai] connection check failed", error);
+    logger.error({ err: error }, "OpenAI connection check failed");
     return NextResponse.json(
-      { status: "unavailable", message: error instanceof Error ? error.message : "Connection failed" },
+      {
+        status: "unavailable",
+        message: error instanceof Error ? error.message : "Connection failed",
+      },
       { status: 503 },
     );
   }

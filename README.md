@@ -22,6 +22,9 @@ The app provides sample network status and support contact details for demonstra
 - `ChatService`, `OpenAIProvider`, and `FallbackSupport` separate orchestration, external AI communication, and local support responses.
 - The server uses asynchronous HTTP requests with a timeout and validates user input before persistence.
 - Conversations and messages are stored in SQLite through Prisma.
+- API routes and the chat service use Pino for structured server-side logs. Set `LOG_LEVEL` to any Pino log level; it defaults to `debug` in development and `info` otherwise. Do not log customer message contents or credentials. Browser-side UI errors are reported through the browser console.
+- Customers can rate a conversation and leave an optional comment after the assistant replies; support staff can review submitted feedback in the conversation inbox.
+- Customers can end a conversation after an assistant response; ended conversations stay available in the inbox but can no longer receive new messages.
 - API routes handle errors centrally and emit concise console diagnostics. Do not log customer message contents or credentials.
 - `/api/health` checks database connectivity; `/api/integrations/openai` checks the optional third-party AI connection.
 - GitHub Actions installs dependencies, generates Prisma, applies the schema, runs integration tests, lints, and builds.
@@ -32,8 +35,8 @@ Run `pnpm db:generate`, `pnpm db:push`, and `pnpm test:integration` after settin
 
 ## Deferred work
 
-Jest unit tests, Playwright end-to-end tests, 80% coverage target, logging library, Prettier configuration, and accessibility-focused visual refinements are intentionally not included yet.
+Jest unit tests, Playwright end-to-end tests, 80% coverage target, Prettier configuration, and accessibility-focused visual refinements are intentionally not included yet.
 
 ## Academic integrity
 
-This prototype was developed with AI assistance. Review and adapt the source, test it, and acknowledge AI use in the format required by your module before submission.
+This prototype was developed with AI assistance. All Code has been human reviewed and tested before being commited to the repo
