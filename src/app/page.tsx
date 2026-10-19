@@ -822,10 +822,11 @@ export default function HomePage() {
                 {messages.some((message) => message.role === "assistant") &&
                   !loading && (
                     <>
-                      <form
-                        className="feedback-panel"
-                        onSubmit={(event) => void submitFeedback(event)}
-                      >
+                      {conversationEnded && (
+                        <form
+                          className="feedback-panel"
+                          onSubmit={(event) => void submitFeedback(event)}
+                        >
                         <div className="feedback-heading">
                           <strong>How was your support experience?</strong>
                           <span>
@@ -899,7 +900,8 @@ export default function HomePage() {
                                 : "Send feedback"}
                           </Button>
                         </div>
-                      </form>
+                        </form>
+                      )}
                       {!conversationEnded && (
                         <div className="end-conversation-panel">
                           <span>Got the information you needed?</span>
