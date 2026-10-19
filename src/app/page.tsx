@@ -404,14 +404,7 @@ export default function HomePage() {
   async function sendMessage(event?: FormEvent, suggestedText?: string) {
     event?.preventDefault();
     const content = (suggestedText ?? draft).trim();
-    if (
-      !content ||
-      !currentActiveId ||
-      loading ||
-      humanSupportRequested ||
-      conversationEnded
-    )
-      return;
+    if (!content || !currentActiveId || loading || conversationEnded) return;
     setDraft("");
     setMessageError("");
     setError("");
@@ -468,7 +461,7 @@ export default function HomePage() {
                       (message) => message.id !== optimistic.id,
                     ),
                     data.userMessage,
-                    data.assistantMessage,
+                    ...(data.assistantMessage ? [data.assistantMessage] : []),
                   ],
                 }
               : item,
@@ -476,7 +469,9 @@ export default function HomePage() {
         { revalidate: false },
       );
       setReplyAnnouncement(
-        `Cheetah Assistant replied: ${data.assistantMessage.content}`,
+        data.assistantMessage
+          ? `Cheetah Assistant replied: ${data.assistantMessage.content}`
+          : "Your message was sent to the support agent.",
       );
       if (data.humanEscalationRequested) await requestHumanSupport();
       if (data.source === "fallback") setAiFallback(true);
@@ -1015,18 +1010,9 @@ export default function HomePage() {
                     setDraft(event.target.value);
                     setMessageError("");
                   }}
-                  placeholder={
-                    humanSupportRequested
-                      ? "A support agent will reply here…"
-                      : "Ask us anything about your broadband…"
-                  }
+                  placeholder="Ask us anything about your broadband…"
                   maxLength={1000}
-                  disabled={
-                    !ready ||
-                    loading ||
-                    conversationEnded ||
-                    humanSupportRequested
-                  }
+                  disabled={!ready || loading || conversationEnded}
                   aria-describedby={`chat-message-count${messageError ? " chat-message-error" : ""}`}
                   aria-invalid={!!messageError}
                 />
@@ -1042,11 +1028,7 @@ export default function HomePage() {
                   className="send-button"
                   type="submit"
                   disabled={
-                    !draft.trim() ||
-                    loading ||
-                    !ready ||
-                    conversationEnded ||
-                    humanSupportRequested
+                    !draft.trim() || loading || !ready || conversationEnded
                   }
                   aria-label="Send message"
                 >
