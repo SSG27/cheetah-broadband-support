@@ -1198,6 +1198,20 @@ h1 span {
   padding: 0 6px 0 12px;
   gap: 9px;
 }
+.human-handoff-note {
+  flex: 0 0 100%;
+  margin: 0;
+  padding: 2px 0 4px;
+  color: #63766a;
+  font-size: 9px;
+  line-height: 1.4;
+}
+.composer:has(.human-handoff-note) {
+  height: auto;
+  min-height: 47px;
+  flex-wrap: wrap;
+  padding-block: 6px;
+}
 .composer:focus-within {
   border-color: #9ec0aa;
   box-shadow: 0 0 0 3px #f1f7f2;

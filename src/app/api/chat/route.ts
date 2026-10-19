@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     );
     const conversation = await prisma.conversation.findUnique({
       where: { id: body.conversationId },
-      select: { userId: true },
+      select: { userId: true, humanRequested: true },
     });
     if (!conversation) {
       return NextResponse.json(
@@ -49,6 +49,12 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
+    if (conversation.humanRequested) {
+      return NextResponse.json(
+        { error: "A support agent is handling this conversation" },
+        { status: 409 },
+      );
+    }
 
     const result = await sendMessage(body.conversationId, content);
     return NextResponse.json(result);
@@ -57,6 +63,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
     if (error instanceof Error && error.message === "Conversation has ended") {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
+    if (
+      error instanceof Error &&
+      error.message === "A support agent is handling this conversation"
+    ) {
       return NextResponse.json({ error: error.message }, { status: 409 });
     }
 

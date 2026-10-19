@@ -129,6 +129,7 @@ export default function HomePage() {
     [activeConversation?.messages],
   );
   const conversationEnded = Boolean(activeConversation?.endedAt);
+  const humanSupportRequested = Boolean(activeConversation?.humanRequested);
 
   // current authenticated user (fetched from server cookie)
   const [currentUser, setCurrentUser] = useState<{
@@ -403,7 +404,14 @@ export default function HomePage() {
   async function sendMessage(event?: FormEvent, suggestedText?: string) {
     event?.preventDefault();
     const content = (suggestedText ?? draft).trim();
-    if (!content || !currentActiveId || loading) return;
+    if (
+      !content ||
+      !currentActiveId ||
+      loading ||
+      humanSupportRequested ||
+      conversationEnded
+    )
+      return;
     setDraft("");
     setMessageError("");
     setError("");
@@ -990,6 +998,11 @@ export default function HomePage() {
                 className="composer"
                 onSubmit={(event) => void sendMessage(event)}
               >
+                {humanSupportRequested && (
+                  <p className="human-handoff-note" role="status">
+                    A support agent has been requested and will reply here.
+                  </p>
+                )}
                 <label className="sr-only" htmlFor="chat-message">
                   Message
                 </label>
@@ -1002,9 +1015,15 @@ export default function HomePage() {
                     setDraft(event.target.value);
                     setMessageError("");
                   }}
-                  placeholder="Ask us anything about your broadband…"
+                  placeholder={
+                    humanSupportRequested
+                      ? "A support agent will reply here…"
+                      : "Ask us anything about your broadband…"
+                  }
                   maxLength={1000}
-                  disabled={!ready || loading || conversationEnded}
+                  disabled={
+                    !ready || loading || conversationEnded || humanSupportRequested
+                  }
                   aria-describedby={`chat-message-count${messageError ? " chat-message-error" : ""}`}
                   aria-invalid={!!messageError}
                 />
@@ -1020,7 +1039,11 @@ export default function HomePage() {
                   className="send-button"
                   type="submit"
                   disabled={
-                    !draft.trim() || loading || !ready || conversationEnded
+                    !draft.trim() ||
+                    loading ||
+                    !ready ||
+                    conversationEnded ||
+                    humanSupportRequested
                   }
                   aria-label="Send message"
                 >
