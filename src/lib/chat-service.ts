@@ -36,10 +36,13 @@ export async function sendMessage(conversationId: string, content: string) {
   }));
 
   let answer: string;
+  let humanEscalationRequested = false;
   let source: "ai" | "fallback" = "fallback";
   if (process.env.OPENAI_API_KEY) {
     try {
-      answer = await openAIReply(history, {}, intent);
+      const reply = await openAIReply(history, {}, intent);
+      answer = reply.answer;
+      humanEscalationRequested = reply.humanEscalationRequested;
       source = "ai";
     } catch (error) {
       logger.warn(
@@ -56,5 +59,11 @@ export async function sendMessage(conversationId: string, content: string) {
     data: { role: "assistant", content: answer, conversationId },
   });
   logger.info({ conversationId, source }, "Chat message handled");
-  return { userMessage, assistantMessage, source, intent };
+  return {
+    userMessage,
+    assistantMessage,
+    source,
+    humanEscalationRequested,
+    intent,
+  };
 }
