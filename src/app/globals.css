@@ -15,6 +15,8 @@
   --canvas: #f6f8f5;
   --white: #fff;
   --orange: #dc8c51;
+  --cheetah-gold: #e3a84a;
+  --cheetah-spot: #3b2412;
   --background: oklch(1 0 0);
   --foreground: #202b28;
   --card: oklch(1 0 0);
@@ -114,7 +116,7 @@ a {
 .brand-mark {
   width: 35px;
   height: 35px;
-  color: var(--green);
+  color: var(--cheetah-spot);
   display: grid;
   place-items: center;
 }
@@ -132,6 +134,37 @@ a {
   letter-spacing: -1.5px;
   font-size: 24px;
   font-weight: 800;
+}
+/* Cheetah-print wordmark, leaning forward to read as fast. */
+:is(.brand, .admin-brand) strong {
+  /* Spot colour in the data URI is --cheetah-spot (CSS vars can't reach inside it). */
+  background: var(--cheetah-gold)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14'%3E%3Cg fill='%233b2412'%3E%3Cellipse cx='3' cy='3.2' rx='1.9' ry='1.5' transform='rotate(-20 3 3.2)'/%3E%3Cellipse cx='10.2' cy='4.8' rx='1.5' ry='1.8'/%3E%3Cellipse cx='6.4' cy='10.4' rx='1.8' ry='1.4' transform='rotate(15 6.4 10.4)'/%3E%3Ccircle cx='12.8' cy='12' r='1.1'/%3E%3Ccircle cx='.9' cy='8.6' r='.8'/%3E%3C/g%3E%3C/svg%3E");
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 0.4px var(--cheetah-spot);
+  transform: skewX(-10deg);
+  transform-origin: bottom left;
+}
+/* Speed lines streak in from the left on hover, staggered. */
+.brand-speed-lines line {
+  stroke-dasharray: 10;
+}
+.brand-speed-lines line:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.brand-speed-lines line:nth-child(3) {
+  animation-delay: 0.16s;
+}
+@media (prefers-reduced-motion: no-preference) {
+  :is(.brand, .admin-brand):hover .brand-speed-lines line {
+    animation: brand-zoom 0.6s ease-out backwards;
+  }
+}
+@keyframes brand-zoom {
+  from {
+    stroke-dashoffset: -10;
+  }
 }
 .brand span {
   margin-top: 4px;
