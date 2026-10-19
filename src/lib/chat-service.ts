@@ -44,7 +44,7 @@ export async function sendMessage(conversationId: string, content: string) {
     take: 12,
   });
   const history: ChatTurn[] = recent.reverse().map((message) => ({
-    role: message.role as ChatTurn["role"],
+    role: message.role === "user" ? "user" : "assistant",
     content: message.content,
   }));
 
