@@ -56,6 +56,10 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && error.message === "Conversation not found") {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
+    if (error instanceof Error && error.message === "Conversation has ended") {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
+
     logger.error({ err: error }, "Chat request failed");
     return NextResponse.json(
       { error: "We couldn’t process that message. Please try again." },

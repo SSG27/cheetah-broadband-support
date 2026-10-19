@@ -11,6 +11,7 @@ import {
   Inbox,
   Plus,
   ShieldCheck,
+  Star,
   Trash2,
   UserRound,
   Gauge,
@@ -50,6 +51,10 @@ type Conversation = {
   updatedAt: string;
   messages: Message[];
   humanRequested?: boolean;
+  feedbackRating: number | null;
+  feedbackComment: string | null;
+  feedbackSubmittedAt: string | null;
+  endedAt: string | null;
 };
 
 const suggestions = [
@@ -101,6 +106,13 @@ export default function HomePage() {
   const [humanRequestState, setHumanRequestState] = useState<
     "idle" | "pending" | "requested" | "error"
   >("idle");
+  const [feedbackRating, setFeedbackRating] = useState<number | null>(null);
+  const [feedbackComment, setFeedbackComment] = useState("");
+  const [feedbackState, setFeedbackState] = useState<
+    "idle" | "pending" | "error"
+  >("idle");
+  const [endingConversation, setEndingConversation] = useState(false);
+  const [endConversationError, setEndConversationError] = useState("");
   const [deletingConversationId, setDeletingConversationId] = useState("");
   const [conversationToDelete, setConversationToDelete] =
     useState<Conversation | null>(null);
@@ -115,6 +127,7 @@ export default function HomePage() {
     () => activeConversation?.messages ?? [],
     [activeConversation?.messages],
   );
+  const conversationEnded = Boolean(activeConversation?.endedAt);
 
   // current authenticated user (fetched from server cookie)
   const [currentUser, setCurrentUser] = useState<{
@@ -201,6 +214,95 @@ export default function HomePage() {
     );
   }, [currentActiveId, activeConversation?.humanRequested]);
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFeedbackRating(activeConversation?.feedbackRating ?? null);
+    setFeedbackComment(activeConversation?.feedbackComment ?? "");
+    setFeedbackState("idle");
+  }, [
+    currentActiveId,
+    activeConversation?.feedbackRating,
+    activeConversation?.feedbackComment,
+  ]);
+
+  async function submitFeedback(event: FormEvent) {
+    event.preventDefault();
+    if (
+      !currentActiveId ||
+      feedbackRating === null ||
+      feedbackState === "pending"
+    )
+      return;
+    setFeedbackState("pending");
+    try {
+      const response = await fetch(
+        `/api/conversations/${currentActiveId}/feedback`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            rating: feedbackRating,
+            comment: feedbackComment,
+          }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error ?? "Unable to save feedback");
+      await mutateConversations(
+        (items = []) =>
+          items.map((item) =>
+            item.id === currentActiveId
+              ? {
+                  ...item,
+                  feedbackRating: data.feedbackRating,
+                  feedbackComment: data.feedbackComment,
+                  feedbackSubmittedAt: data.feedbackSubmittedAt,
+                }
+              : item,
+          ),
+        { revalidate: false },
+      );
+      setFeedbackState("idle");
+    } catch (cause) {
+      console.error("[ui] feedback submission failed", cause);
+      setFeedbackState("error");
+    }
+  }
+
+  async function endConversation() {
+    if (!currentActiveId || endingConversation || conversationEnded) return;
+    setEndingConversation(true);
+    setEndConversationError("");
+    try {
+      const response = await fetch(
+        `/api/conversations/${currentActiveId}/end`,
+        { method: "POST" },
+      );
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error ?? "Unable to end this conversation");
+      await mutateConversations(
+        (items = []) =>
+          items.map((item) =>
+            item.id === currentActiveId
+              ? {
+                  ...item,
+                  endedAt: data.endedAt,
+                  updatedAt: data.updatedAt,
+                }
+              : item,
+          ),
+        { revalidate: false },
+      );
+    } catch (cause) {
+      console.error("[ui] ending conversation failed", cause);
+      setEndConversationError("We couldn’t end this chat. Please try again.");
+    } finally {
+      setEndingConversation(false);
+    }
+  }
+
   async function requestHumanSupport() {
     if (
       !currentActiveId ||
@@ -236,6 +338,7 @@ export default function HomePage() {
     setCopyIdError("");
     setCopyIdErrorConversationId("");
     setCopiedConversationId("");
+    setEndConversationError("");
     try {
       const response = await fetch("/api/conversations", { method: "POST" });
       if (!response.ok) throw new Error("Unable to create conversation");
@@ -447,7 +550,10 @@ export default function HomePage() {
             <div className="conversation-item" key={conversation.id}>
               <button
                 className={`conversation-link${currentActiveId === conversation.id ? " active" : ""}`}
-                onClick={() => setActiveId(conversation.id)}
+                onClick={() => {
+                  setEndConversationError("");
+                  setActiveId(conversation.id);
+                }}
                 disabled={!!deletingConversationId}
               >
                 <span className="conversation-dot" />
@@ -637,12 +743,21 @@ export default function HomePage() {
               >
                 {replyAnnouncement}
               </div>
+
               <div
                 className="messages-area"
                 ref={messagesContainer}
                 role="region"
                 aria-label="Conversation messages"
               >
+                {conversationEnded && (
+                  <Alert className="conversation-ended-alert">
+                    <AlertDescription>
+                      This conversation has ended. Your chat is saved if you
+                      need to refer back to it.
+                    </AlertDescription>
+                  </Alert>
+                )}
                 {!ready && (
                   <div className="loading-state">
                     <span className="spinner" /> Getting your support space
@@ -704,6 +819,116 @@ export default function HomePage() {
                     )}
                   </div>
                 ))}
+                {messages.some((message) => message.role === "assistant") &&
+                  !loading && (
+                    <>
+                      {conversationEnded && (
+                        <form
+                          className="feedback-panel"
+                          onSubmit={(event) => void submitFeedback(event)}
+                        >
+                          <div className="feedback-heading">
+                            <strong>How was your support experience?</strong>
+                            <span>
+                              Your feedback helps us improve our support.
+                            </span>
+                          </div>
+                          <div
+                            className="feedback-rating"
+                            role="group"
+                            aria-label="Rate your support experience"
+                          >
+                            {[1, 2, 3, 4, 5].map((rating) => (
+                              <button
+                                key={rating}
+                                type="button"
+                                className={
+                                  feedbackRating !== null &&
+                                  rating <= feedbackRating
+                                    ? "feedback-star selected"
+                                    : "feedback-star"
+                                }
+                                aria-label={`${rating} out of 5 stars`}
+                                aria-pressed={feedbackRating === rating}
+                                onClick={() => {
+                                  setFeedbackRating(rating);
+                                  setFeedbackState("idle");
+                                }}
+                              >
+                                <Star aria-hidden="true" />
+                              </button>
+                            ))}
+                          </div>
+                          <label className="feedback-comment-label">
+                            <span>
+                              Anything else you’d like to share? (optional)
+                            </span>
+                            <textarea
+                              value={feedbackComment}
+                              onChange={(event) => {
+                                setFeedbackComment(event.target.value);
+                                setFeedbackState("idle");
+                              }}
+                              maxLength={500}
+                              placeholder="Tell us a little more..."
+                            />
+                          </label>
+                          <div className="feedback-submit-row">
+                            <span
+                              className={`feedback-status${feedbackState === "error" ? " error" : ""}`}
+                              role="status"
+                              aria-live="polite"
+                            >
+                              {activeConversation?.feedbackSubmittedAt
+                                ? "Thanks — your feedback has been saved."
+                                : ""}
+                              {feedbackState === "error" &&
+                                "We couldn’t save your feedback. Please try again."}
+                            </span>
+                            <Button
+                              size="sm"
+                              type="submit"
+                              disabled={
+                                feedbackRating === null ||
+                                feedbackState === "pending"
+                              }
+                            >
+                              {feedbackState === "pending"
+                                ? "Sending…"
+                                : activeConversation?.feedbackSubmittedAt
+                                  ? "Update feedback"
+                                  : "Send feedback"}
+                            </Button>
+                          </div>
+                        </form>
+                      )}
+                      {!conversationEnded && (
+                        <div className="end-conversation-panel">
+                          <span>Got the information you needed?</span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => void endConversation()}
+                            disabled={endingConversation}
+                          >
+                            {endingConversation
+                              ? "Ending chat…"
+                              : "End conversation"}
+                          </Button>
+                        </div>
+                      )}
+                      {endConversationError && (
+                        <Alert
+                          variant="destructive"
+                          className="end-conversation-error"
+                        >
+                          <AlertDescription>
+                            {endConversationError}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                    </>
+                  )}
                 {loading && (
                   <div className="message-row from-assistant">
                     <Avatar className="chat-avatar">
@@ -719,7 +944,7 @@ export default function HomePage() {
                   </div>
                 )}
               </div>
-              {messages.length === 0 && ready && (
+              {messages.length === 0 && ready && !conversationEnded && (
                 <div className="suggestion-area">
                   <span className="suggestion-label">
                     A GOOD PLACE TO START
@@ -767,7 +992,7 @@ export default function HomePage() {
                   }}
                   placeholder="Ask us anything about your broadband…"
                   maxLength={1000}
-                  disabled={!ready || loading}
+                  disabled={!ready || loading || conversationEnded}
                   aria-describedby={`chat-message-count${messageError ? " chat-message-error" : ""}`}
                   aria-invalid={!!messageError}
                 />
@@ -782,7 +1007,9 @@ export default function HomePage() {
                   size="icon"
                   className="send-button"
                   type="submit"
-                  disabled={!draft.trim() || loading || !ready}
+                  disabled={
+                    !draft.trim() || loading || !ready || conversationEnded
+                  }
                   aria-label="Send message"
                 >
                   <ArrowUp aria-hidden="true" />
@@ -850,6 +1077,7 @@ export default function HomePage() {
                 onClick={() => void requestHumanSupport()}
                 disabled={
                   !ready ||
+                  conversationEnded ||
                   humanRequestState === "pending" ||
                   humanRequestState === "requested"
                 }
@@ -861,7 +1089,7 @@ export default function HomePage() {
                     : "Request a human"}
                 <span>{humanRequestState === "requested" ? "✓" : "→"}</span>
               </Button>
-              {humanRequestState === "error" && (
+              {humanRequestState === "error" && !conversationEnded && (
                 <Alert variant="destructive" className="human-request-error">
                   <CircleHelp aria-hidden="true" />
                   <AlertDescription>

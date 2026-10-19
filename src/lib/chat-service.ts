@@ -10,6 +10,7 @@ export async function sendMessage(conversationId: string, content: string) {
     where: { id: conversationId },
   });
   if (!conversation) throw new Error("Conversation not found");
+  if (conversation.endedAt) throw new Error("Conversation has ended");
 
   const userMessage = await prisma.message.create({
     data: { role: "user", content, conversationId },
