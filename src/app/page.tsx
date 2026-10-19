@@ -827,79 +827,79 @@ export default function HomePage() {
                           className="feedback-panel"
                           onSubmit={(event) => void submitFeedback(event)}
                         >
-                        <div className="feedback-heading">
-                          <strong>How was your support experience?</strong>
-                          <span>
-                            Your feedback helps us improve our support.
-                          </span>
-                        </div>
-                        <div
-                          className="feedback-rating"
-                          role="group"
-                          aria-label="Rate your support experience"
-                        >
-                          {[1, 2, 3, 4, 5].map((rating) => (
-                            <button
-                              key={rating}
-                              type="button"
-                              className={
-                                feedbackRating !== null &&
-                                rating <= feedbackRating
-                                  ? "feedback-star selected"
-                                  : "feedback-star"
-                              }
-                              aria-label={`${rating} out of 5 stars`}
-                              aria-pressed={feedbackRating === rating}
-                              onClick={() => {
-                                setFeedbackRating(rating);
+                          <div className="feedback-heading">
+                            <strong>How was your support experience?</strong>
+                            <span>
+                              Your feedback helps us improve our support.
+                            </span>
+                          </div>
+                          <div
+                            className="feedback-rating"
+                            role="group"
+                            aria-label="Rate your support experience"
+                          >
+                            {[1, 2, 3, 4, 5].map((rating) => (
+                              <button
+                                key={rating}
+                                type="button"
+                                className={
+                                  feedbackRating !== null &&
+                                  rating <= feedbackRating
+                                    ? "feedback-star selected"
+                                    : "feedback-star"
+                                }
+                                aria-label={`${rating} out of 5 stars`}
+                                aria-pressed={feedbackRating === rating}
+                                onClick={() => {
+                                  setFeedbackRating(rating);
+                                  setFeedbackState("idle");
+                                }}
+                              >
+                                <Star aria-hidden="true" />
+                              </button>
+                            ))}
+                          </div>
+                          <label className="feedback-comment-label">
+                            <span>
+                              Anything else you’d like to share? (optional)
+                            </span>
+                            <textarea
+                              value={feedbackComment}
+                              onChange={(event) => {
+                                setFeedbackComment(event.target.value);
                                 setFeedbackState("idle");
                               }}
+                              maxLength={500}
+                              placeholder="Tell us a little more..."
+                            />
+                          </label>
+                          <div className="feedback-submit-row">
+                            <span
+                              className={`feedback-status${feedbackState === "error" ? " error" : ""}`}
+                              role="status"
+                              aria-live="polite"
                             >
-                              <Star aria-hidden="true" />
-                            </button>
-                          ))}
-                        </div>
-                        <label className="feedback-comment-label">
-                          <span>
-                            Anything else you’d like to share? (optional)
-                          </span>
-                          <textarea
-                            value={feedbackComment}
-                            onChange={(event) => {
-                              setFeedbackComment(event.target.value);
-                              setFeedbackState("idle");
-                            }}
-                            maxLength={500}
-                            placeholder="Tell us a little more..."
-                          />
-                        </label>
-                        <div className="feedback-submit-row">
-                          <span
-                            className={`feedback-status${feedbackState === "error" ? " error" : ""}`}
-                            role="status"
-                            aria-live="polite"
-                          >
-                            {activeConversation?.feedbackSubmittedAt
-                              ? "Thanks — your feedback has been saved."
-                              : ""}
-                            {feedbackState === "error" &&
-                              "We couldn’t save your feedback. Please try again."}
-                          </span>
-                          <Button
-                            size="sm"
-                            type="submit"
-                            disabled={
-                              feedbackRating === null ||
-                              feedbackState === "pending"
-                            }
-                          >
-                            {feedbackState === "pending"
-                              ? "Sending…"
-                              : activeConversation?.feedbackSubmittedAt
-                                ? "Update feedback"
-                                : "Send feedback"}
-                          </Button>
-                        </div>
+                              {activeConversation?.feedbackSubmittedAt
+                                ? "Thanks — your feedback has been saved."
+                                : ""}
+                              {feedbackState === "error" &&
+                                "We couldn’t save your feedback. Please try again."}
+                            </span>
+                            <Button
+                              size="sm"
+                              type="submit"
+                              disabled={
+                                feedbackRating === null ||
+                                feedbackState === "pending"
+                              }
+                            >
+                              {feedbackState === "pending"
+                                ? "Sending…"
+                                : activeConversation?.feedbackSubmittedAt
+                                  ? "Update feedback"
+                                  : "Send feedback"}
+                            </Button>
+                          </div>
                         </form>
                       )}
                       {!conversationEnded && (

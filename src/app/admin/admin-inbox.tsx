@@ -391,7 +391,10 @@ export default function AdminPage() {
                           </span>
                           <span className="admin-conversation-meta">
                             {conversation.endedAt && (
-                              <Badge variant="secondary" className="ended-conversation-badge">
+                              <Badge
+                                variant="secondary"
+                                className="ended-conversation-badge"
+                              >
                                 Ended
                               </Badge>
                             )}
@@ -475,7 +478,8 @@ export default function AdminPage() {
                   </div>
                   {selected.endedAt && (
                     <div className="admin-ended-notice">
-                      Customer ended this conversation {formatTime(selected.endedAt)}.
+                      Customer ended this conversation{" "}
+                      {formatTime(selected.endedAt)}.
                     </div>
                   )}
                   {selected.humanRequested && (
@@ -513,24 +517,28 @@ export default function AdminPage() {
                       </Button>
                     </Alert>
                   )}
-                  {selected.feedbackRating !== null && selected.feedbackSubmittedAt && (
-                    <div className="admin-customer-feedback">
-                      <div className="admin-customer-feedback-heading">
-                        <strong>Customer feedback</strong>
-                        <span>
-                          {selected.feedbackRating} out of 5 · {formatTime(selected.feedbackSubmittedAt)}
-                        </span>
+                  {selected.feedbackRating !== null &&
+                    selected.feedbackSubmittedAt && (
+                      <div className="admin-customer-feedback">
+                        <div className="admin-customer-feedback-heading">
+                          <strong>Customer feedback</strong>
+                          <span>
+                            {selected.feedbackRating} out of 5 ·{" "}
+                            {formatTime(selected.feedbackSubmittedAt)}
+                          </span>
+                        </div>
+                        <div
+                          className="admin-customer-feedback-stars"
+                          aria-label={`${selected.feedbackRating} out of 5 stars`}
+                        >
+                          {"★".repeat(selected.feedbackRating)}
+                          {"☆".repeat(5 - selected.feedbackRating)}
+                        </div>
+                        {selected.feedbackComment && (
+                          <p>{selected.feedbackComment}</p>
+                        )}
                       </div>
-                      <div
-                        className="admin-customer-feedback-stars"
-                        aria-label={`${selected.feedbackRating} out of 5 stars`}
-                      >
-                        {"★".repeat(selected.feedbackRating)}
-                        {"☆".repeat(5 - selected.feedbackRating)}
-                      </div>
-                      {selected.feedbackComment && <p>{selected.feedbackComment}</p>}
-                    </div>
-                  )}
+                    )}
                   <div className="admin-thread">
                     <div className="admin-thread-date">
                       <Separator />
