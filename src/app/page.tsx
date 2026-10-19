@@ -36,6 +36,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { BrandMark } from "@/components/brand-mark";
+import { MarkdownMessage } from "@/components/markdown-message";
 import { apiFetcher } from "@/lib/api-fetcher";
 import { redirect } from "next/navigation";
 
@@ -818,7 +819,11 @@ export default function HomePage() {
                             : "assistant-bubble"
                         }
                       >
-                        {message.content}
+                        {message.role === "assistant" ? (
+                          <MarkdownMessage content={message.content} />
+                        ) : (
+                          message.content
+                        )}
                       </Card>
                     </div>
                     {message.role === "user" && (
