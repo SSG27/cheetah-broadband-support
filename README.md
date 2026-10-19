@@ -39,4 +39,4 @@ Jest unit tests, Playwright end-to-end tests, 80% coverage target, Prettier conf
 
 ## Academic integrity
 
-This prototype was developed with AI assistance. Review and adapt the source, test it, and acknowledge AI use in the format required by your module before submission.
+This prototype was developed with AI assistance. All Code has been human reviewed and tested before being commited to the repo
