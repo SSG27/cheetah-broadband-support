@@ -59,5 +59,11 @@ export async function sendMessage(conversationId: string, content: string) {
     data: { role: "assistant", content: answer, conversationId },
   });
   logger.info({ conversationId, source }, "Chat message handled");
-  return { userMessage, assistantMessage, source, humanEscalationRequested, intent };
+  return {
+    userMessage,
+    assistantMessage,
+    source,
+    humanEscalationRequested,
+    intent,
+  };
 }

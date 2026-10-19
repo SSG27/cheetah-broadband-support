@@ -80,11 +80,12 @@ export async function openAIReply(
     );
   }
   const message = response.choices[0]?.message;
-  const humanEscalationRequested = message?.tool_calls?.some(
-    (call) =>
-      call.type === "function" &&
-      call.function.name === "request_human_support",
-  ) ?? false;
+  const humanEscalationRequested =
+    message?.tool_calls?.some(
+      (call) =>
+        call.type === "function" &&
+        call.function.name === "request_human_support",
+    ) ?? false;
   const answer =
     message?.content?.trim() ||
     (humanEscalationRequested
