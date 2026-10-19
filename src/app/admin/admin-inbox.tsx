@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BrandMark } from "@/components/brand-mark";
+import { MarkdownMessage } from "@/components/markdown-message";
 import { apiFetcher } from "@/lib/api-fetcher";
 
 type Message = {
@@ -623,7 +624,11 @@ export default function AdminPage() {
                           </time>
                         </div>
                         <Card className="admin-message-bubble">
-                          {message.content}
+                          {message.role === "assistant" ? (
+                            <MarkdownMessage content={message.content} />
+                          ) : (
+                            message.content
+                          )}
                         </Card>
                       </div>
                     ))}
