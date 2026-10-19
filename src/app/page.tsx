@@ -1022,7 +1022,10 @@ export default function HomePage() {
                   }
                   maxLength={1000}
                   disabled={
-                    !ready || loading || conversationEnded || humanSupportRequested
+                    !ready ||
+                    loading ||
+                    conversationEnded ||
+                    humanSupportRequested
                   }
                   aria-describedby={`chat-message-count${messageError ? " chat-message-error" : ""}`}
                   aria-invalid={!!messageError}
