@@ -2014,7 +2014,7 @@ h1 span {
   color: #98a29c;
 }
 .admin-inbox {
-  height: min(630px, calc(100vh - 300px));
+  height: min(760px, calc(100vh - 235px));
   min-height: 390px;
   display: grid;
   grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
@@ -2389,6 +2389,62 @@ h1 span {
 .admin-readonly-note span {
   color: #80a18b;
 }
+.admin-reply-composer {
+  border-top: 1px solid #edf0ed;
+  padding: 12px 18px 10px;
+  background: #fff;
+}
+.admin-reply-composer > label {
+  display: block;
+  margin-bottom: 7px;
+  color: #53645a;
+  font-size: 9px;
+  font-weight: 700;
+}
+.admin-reply-controls {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+.admin-reply-controls textarea {
+  flex: 1;
+  min-width: 0;
+  resize: vertical;
+  border: 1px solid #dfe8e1;
+  border-radius: 6px;
+  padding: 9px 10px;
+  color: #34483a;
+  font: inherit;
+  font-size: 10px;
+  line-height: 1.5;
+  outline: none;
+}
+.admin-reply-controls textarea:focus {
+  border-color: #7ba98a;
+  box-shadow: 0 0 0 2px #7ba98a22;
+}
+.admin-reply-controls button {
+  align-self: flex-end;
+  min-height: 36px;
+  padding: 0 12px;
+  background: #347a4f;
+  color: #fff;
+  font-size: 9px;
+}
+.admin-reply-controls button svg {
+  width: 12px;
+  height: 12px;
+}
+.admin-reply-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  color: #9aa49e;
+  font-size: 8px;
+}
+.admin-reply-footer [role="alert"] {
+  color: #a34f37;
+}
 .admin-no-selection {
   margin: auto;
   text-align: center;
@@ -2505,7 +2561,7 @@ h1 span {
     font-size: 7px;
   }
   .admin-inbox {
-    height: calc(100vh - 290px);
+    height: calc(100vh - 240px);
     min-height: 370px;
     grid-template-columns: 1fr;
   }
@@ -2601,28 +2657,33 @@ h1 span {
   padding: 4px 6px;
 }
 .admin-human-alert {
-  margin: 13px 20px 0;
-  padding: 11px 12px;
+  width: auto;
+  margin: 8px 14px 0;
+  padding: 8px 10px;
   border: 1px solid #f2dfd2;
   background: #fff9f5;
   border-radius: 7px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 9px;
   color: #b36a40;
 }
 .admin-human-alert > span:first-child {
   font-size: 15px;
+  flex-shrink: 0;
 }
 .admin-human-alert div {
   display: flex;
   flex-direction: column;
   gap: 3px;
   min-width: 0;
+  flex: 1 1 180px;
 }
 .admin-human-alert strong {
   font-size: 9px;
   color: #82583f;
+  overflow-wrap: anywhere;
 }
 .admin-human-alert small {
   font-size: 8px;

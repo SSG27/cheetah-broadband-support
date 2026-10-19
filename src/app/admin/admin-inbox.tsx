@@ -11,6 +11,7 @@ import {
   MessageSquareText,
   MoreHorizontal,
   RefreshCw,
+  Send,
   Search,
   UserRound,
 } from "lucide-react";
@@ -27,7 +28,7 @@ import { apiFetcher } from "@/lib/api-fetcher";
 
 type Message = {
   id: string;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "agent";
   content: string;
   createdAt: string;
 };
@@ -83,6 +84,9 @@ export default function AdminPage() {
   const [priorityUpdatingId, setPriorityUpdatingId] = useState("");
   const [priorityError, setPriorityError] = useState("");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [reply, setReply] = useState("");
+  const [replySending, setReplySending] = useState(false);
+  const [replyError, setReplyError] = useState("");
 
   const loadError = error
     ? "We couldn’t load conversations. Please refresh to try again."
@@ -146,6 +150,49 @@ export default function AdminPage() {
       setPriorityError("Couldn’t clear priority. Please try again.");
     } finally {
       setPriorityUpdatingId("");
+    }
+  }
+
+  async function sendReply(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selected || !reply.trim() || replySending) return;
+
+    setReplySending(true);
+    setReplyError("");
+    try {
+      const response = await fetch(`/api/conversations/${selected.id}/reply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: reply }),
+      });
+      if (!response.ok) {
+        const result = (await response.json()) as { error?: string };
+        throw new Error(result.error || "Unable to send reply");
+      }
+      const message = (await response.json()) as Message;
+      await mutateConversations(
+        (items = []) =>
+          items.map((item) =>
+            item.id === selected.id
+              ? {
+                  ...item,
+                  messages: [...item.messages, message],
+                  updatedAt: message.createdAt,
+                }
+              : item,
+          ),
+        { revalidate: false },
+      );
+      setReply("");
+    } catch (cause) {
+      console.error("[admin] failed to send support reply", cause);
+      setReplyError(
+        cause instanceof Error && cause.message
+          ? cause.message
+          : "Couldn’t send reply. Please try again.",
+      );
+    } finally {
+      setReplySending(false);
     }
   }
 
@@ -559,7 +606,9 @@ export default function AdminPage() {
                           <strong>
                             {message.role === "user"
                               ? "Customer"
-                              : "Cheetah Assistant"}
+                              : message.role === "agent"
+                                ? "Support agent"
+                                : "Cheetah Assistant"}
                           </strong>
                           <time>
                             {new Date(message.createdAt).toLocaleString(
@@ -579,9 +628,44 @@ export default function AdminPage() {
                       </div>
                     ))}
                   </div>
-                  <div className="admin-readonly-note">
-                    <span>◈</span> Viewing conversation history
-                  </div>
+                  {selected.humanRequested ? (
+                    <form
+                      className="admin-reply-composer"
+                      onSubmit={(event) => void sendReply(event)}
+                    >
+                      <label htmlFor="support-reply">Reply to customer</label>
+                      <div className="admin-reply-controls">
+                        <textarea
+                          id="support-reply"
+                          value={reply}
+                          onChange={(event) => setReply(event.target.value)}
+                          placeholder="Write a reply…"
+                          maxLength={1000}
+                          rows={2}
+                          disabled={replySending}
+                        />
+                        <Button
+                          type="submit"
+                          disabled={!reply.trim() || replySending}
+                        >
+                          <Send aria-hidden="true" />
+                          {replySending ? "Sending…" : "Send reply"}
+                        </Button>
+                      </div>
+                      <div className="admin-reply-footer">
+                        {replyError ? (
+                          <span role="alert">{replyError}</span>
+                        ) : (
+                          <span>Up to 1000 characters</span>
+                        )}
+                        <span>{reply.length}/1000</span>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="admin-readonly-note">
+                      <span>◈</span> Viewing conversation history
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="admin-no-selection">

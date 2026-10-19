@@ -41,7 +41,7 @@ import { redirect } from "next/navigation";
 
 type Message = {
   id: string;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "agent";
   content: string;
   createdAt: string;
 };
@@ -788,7 +788,7 @@ export default function HomePage() {
                     key={message.id}
                     className={`message-row ${message.role === "user" ? "from-user" : "from-assistant"}`}
                   >
-                    {message.role === "assistant" && (
+                    {message.role !== "user" && (
                       <Avatar className="chat-avatar">
                         <AvatarFallback className="bg-transparent">
                           <BrandMark />
@@ -797,7 +797,11 @@ export default function HomePage() {
                     )}
                     <div className="message-content">
                       <span className="message-time">
-                        {message.role === "user" ? "YOU" : "CHEETAH ASSISTANT"}{" "}
+                        {message.role === "user"
+                          ? "YOU"
+                          : message.role === "agent"
+                            ? "SUPPORT AGENT"
+                            : "CHEETAH ASSISTANT"}{" "}
                         ·{" "}
                         {new Date(message.createdAt).toLocaleTimeString(
                           "en-GB",
