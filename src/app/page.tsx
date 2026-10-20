@@ -3,17 +3,21 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import useSWR from "swr";
+import { Dialog } from "@base-ui/react/dialog";
 import {
   ArrowUp,
   Check,
   CircleHelp,
   Copy,
+  Headset,
   Inbox,
+  MessageCircle,
   Plus,
   ShieldCheck,
   Star,
   Trash2,
   UserRound,
+  X,
   Gauge,
   WifiIcon,
   GlobeOff,
@@ -656,14 +660,88 @@ export default function HomePage() {
             <div className="secure-label">
               <ShieldCheck aria-hidden="true" /> Secure conversation
             </div>
-            <Button
-              variant="outline"
-              size="icon-sm"
-              className="help-button"
-              aria-label="Help"
-            >
-              <CircleHelp aria-hidden="true" />
-            </Button>
+            <Dialog.Root>
+              <Dialog.Trigger className="help-button" aria-label="Open help">
+                <CircleHelp aria-hidden="true" />
+              </Dialog.Trigger>
+              <Dialog.Portal>
+                <Dialog.Backdrop className="help-dialog-backdrop" />
+                <Dialog.Popup className="help-dialog">
+                  <div className="help-dialog-heading">
+                    <span className="help-dialog-mark">
+                      <CircleHelp aria-hidden="true" />
+                    </span>
+                    <div className="help-dialog-heading-copy">
+                      <Dialog.Title className="help-dialog-title">
+                        Chatbot help
+                      </Dialog.Title>
+                      <Dialog.Description className="help-dialog-description">
+                        Quick guidance for getting support from Cheetah.
+                      </Dialog.Description>
+                    </div>
+                    <Dialog.Close
+                      className="help-dialog-close"
+                      aria-label="Close help"
+                    >
+                      <X aria-hidden="true" />
+                    </Dialog.Close>
+                  </div>
+
+                  <div className="help-dialog-sections">
+                    <section className="help-dialog-section">
+                      <span className="help-dialog-section-icon">
+                        <MessageCircle aria-hidden="true" />
+                      </span>
+                      <div>
+                        <h3>Ask a question</h3>
+                        <p>
+                          Type in the message box and select the send arrow. In
+                          a new chat, you can also choose a suggested question
+                          to get started.
+                        </p>
+                      </div>
+                    </section>
+                    <section className="help-dialog-section">
+                      <span className="help-dialog-section-icon">
+                        <WifiIcon aria-hidden="true" />
+                      </span>
+                      <div>
+                        <h3>What I can help with</h3>
+                        <p>
+                          Ask about broadband speeds, Wi-Fi coverage, connection
+                          dropouts, service issues, or general billing
+                          questions.
+                        </p>
+                      </div>
+                    </section>
+                    <section className="help-dialog-section">
+                      <span className="help-dialog-section-icon">
+                        <Headset aria-hidden="true" />
+                      </span>
+                      <div>
+                        <h3>Speak to a person</h3>
+                        <p>
+                          Select <strong>Request a human</strong> in the support
+                          panel and an agent will reply in this chat. You can
+                          also call <a href="tel:08000142025">0800 014 2025</a>,
+                          Monday to Saturday, 8am–8pm.
+                        </p>
+                      </div>
+                    </section>
+                  </div>
+
+                  <p className="help-dialog-privacy">
+                    <ShieldCheck aria-hidden="true" />
+                    Keep passwords and full payment details private.
+                  </p>
+                  <div className="help-dialog-footer">
+                    <Dialog.Close className="help-dialog-done">
+                      Got it
+                    </Dialog.Close>
+                  </div>
+                </Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
           </div>
         </header>
         <div className="work-area">
