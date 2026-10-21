@@ -5,7 +5,7 @@ A customer-support chatbot prototype for Cheetah Broadband, a fictional UK inter
 ## Requirements
 
 - Node.js 20.9 or newer
-- pnpm 11.7 or newer
+- pnpm 12.3.4 (declared by `packageManager`)
 
 ## Run locally
 
@@ -33,9 +33,13 @@ The app provides sample network status and support contact details for demonstra
 
 Run `pnpm db:generate`, `pnpm db:push`, and `pnpm test:integration` after setting `DATABASE_URL`. The integration suite exercises the chat-service/database flow and the OpenAI request adapter with a controlled HTTP response. If `OPENAI_API_KEY` is set, it also calls the real OpenAI models endpoint. That live check is skipped in CI unless a key is provided.
 
+## Documentation
+
+See [`docs/README.md`](docs/README.md) for the technical reference and testing guide.
+
 ## Deferred work
 
-Jest unit tests, Playwright end-to-end tests, 80% coverage target, Prettier configuration, and accessibility-focused visual refinements are intentionally not included yet.
+An 80% coverage target and further accessibility-focused visual refinements are not configured yet.
 
 ## Academic integrity
 
