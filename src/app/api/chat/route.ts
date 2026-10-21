@@ -49,8 +49,51 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-    const result = await sendMessage(body.conversationId, content);
-    return NextResponse.json(result);
+    const conversationId = body.conversationId;
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        const send = (event: Record<string, unknown>) => {
+          controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
+        };
+        try {
+          const result = await sendMessage(
+            conversationId,
+            content,
+            (text) => send({ type: "token", text }),
+            (text) => send({ type: "replace", text }),
+          );
+          send({ type: "complete", result });
+        } catch (error) {
+          if (
+            error instanceof Error &&
+            error.message === "Conversation not found"
+          ) {
+            send({ type: "error", error: error.message, status: 404 });
+          } else if (
+            error instanceof Error &&
+            error.message === "Conversation has ended"
+          ) {
+            send({ type: "error", error: error.message, status: 409 });
+          } else {
+            logger.error({ err: error }, "Chat request failed");
+            send({
+              type: "error",
+              error: "We couldn’t process that message. Please try again.",
+              status: 500,
+            });
+          }
+        } finally {
+          controller.close();
+        }
+      },
+    });
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "application/x-ndjson; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+      },
+    });
   } catch (error) {
     if (error instanceof Error && error.message === "Conversation not found") {
       return NextResponse.json({ error: error.message }, { status: 404 });

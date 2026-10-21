@@ -4,7 +4,12 @@ import { openAIReply, type ChatTurn } from "@/lib/ai-provider";
 import { detectSupportIntent } from "@/lib/intents";
 import { logger } from "@/lib/logger";
 
-export async function sendMessage(conversationId: string, content: string) {
+export async function sendMessage(
+  conversationId: string,
+  content: string,
+  onToken?: (token: string) => void,
+  onReplace?: (text: string) => void,
+) {
   const intent = detectSupportIntent(content);
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
@@ -51,9 +56,10 @@ export async function sendMessage(conversationId: string, content: string) {
   let answer: string;
   let humanEscalationRequested = false;
   let source: "ai" | "fallback" = "fallback";
+  let fallbackAlreadySent = false;
   if (process.env.OPENAI_API_KEY) {
     try {
-      const reply = await openAIReply(history, {}, intent);
+      const reply = await openAIReply(history, {}, intent, onToken);
       answer = reply.answer;
       humanEscalationRequested = reply.humanEscalationRequested;
       source = "ai";
@@ -63,10 +69,16 @@ export async function sendMessage(conversationId: string, content: string) {
         "AI provider unavailable; using local support response",
       );
       answer = fallbackSupport(content);
+      if (onReplace) {
+        onReplace(answer);
+        fallbackAlreadySent = true;
+      }
     }
   } else {
     answer = fallbackSupport(content);
   }
+
+  if (source === "fallback" && !fallbackAlreadySent) onToken?.(answer);
 
   const assistantMessage = await prisma.message.create({
     data: { role: "assistant", content: answer, conversationId },

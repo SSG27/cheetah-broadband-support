@@ -50,6 +50,12 @@ type Message = {
   content: string;
   createdAt: string;
 };
+type ChatResult = {
+  userMessage: Message;
+  assistantMessage: Message | null;
+  source: "ai" | "fallback" | "human";
+  humanEscalationRequested: boolean;
+};
 type Conversation = {
   id: string;
   title: string;
@@ -104,6 +110,7 @@ export default function HomePage() {
   const [copyIdErrorConversationId, setCopyIdErrorConversationId] =
     useState("");
   const [loading, setLoading] = useState(false);
+  const [streamingReply, setStreamingReply] = useState("");
   const [messageError, setMessageError] = useState("");
   const [error, setError] = useState("");
   const [replyAnnouncement, setReplyAnnouncement] = useState("");
@@ -170,11 +177,11 @@ export default function HomePage() {
     if (
       conversationsLoading ||
       conversationsError ||
-      conversations.length ||
       initialConversationStarted.current
     )
       return;
     initialConversationStarted.current = true;
+    if (conversations.length) return;
     void fetch("/api/conversations", { method: "POST" })
       .then(async (response) => {
         if (!response.ok) throw new Error("Unable to start a conversation");
@@ -211,7 +218,7 @@ export default function HomePage() {
     const container = messagesContainer.current;
     if (container)
       container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
-  }, [messages, loading]);
+  }, [messages, loading, streamingReply]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -413,6 +420,7 @@ export default function HomePage() {
     setMessageError("");
     setError("");
     setReplyAnnouncement("");
+    setStreamingReply("");
     setLoading(true);
     const optimistic: Message = {
       // eslint-disable-next-line react-hooks/purity
@@ -446,9 +454,47 @@ export default function HomePage() {
           message: content,
         }),
       });
-      const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.error ?? "Message could not be sent");
+      if (!response.ok) {
+        const errorData = (await response.json()) as { error?: string };
+        throw new Error(errorData.error ?? "Message could not be sent");
+      }
+      if (!response.body) throw new Error("Message could not be sent");
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let pending = "";
+      let data: ChatResult | undefined;
+      while (true) {
+        const { value, done } = await reader.read();
+        pending += decoder.decode(value, { stream: !done });
+        const lines = pending.split("\n");
+        pending = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const event = JSON.parse(line) as
+            | { type: "token"; text: string }
+            | { type: "replace"; text: string }
+            | { type: "complete"; result: ChatResult }
+            | { type: "error"; error: string };
+          if (event.type === "token") {
+            setStreamingReply((text) => text + event.text);
+          } else if (event.type === "replace") {
+            setStreamingReply(event.text);
+          } else if (event.type === "error") {
+            throw new Error(event.error);
+          } else {
+            data = event.result;
+          }
+        }
+        if (done) break;
+      }
+      if (pending.trim()) {
+        const event = JSON.parse(pending) as
+          | { type: "complete"; result: ChatResult }
+          | { type: "error"; error: string };
+        if (event.type === "error") throw new Error(event.error);
+        data = event.result;
+      }
+      if (!data) throw new Error("Message could not be sent");
       await mutateConversations(
         (items = []) =>
           items.map((item) =>
@@ -462,7 +508,10 @@ export default function HomePage() {
                   updatedAt: new Date().toISOString(),
                   messages: [
                     ...item.messages.filter(
-                      (message) => message.id !== optimistic.id,
+                      (message) =>
+                        message.id !== optimistic.id &&
+                        message.id !== data.userMessage.id &&
+                        message.id !== data.assistantMessage?.id,
                     ),
                     data.userMessage,
                     ...(data.assistantMessage ? [data.assistantMessage] : []),
@@ -502,6 +551,7 @@ export default function HomePage() {
       );
       setDraft(content);
     } finally {
+      setStreamingReply("");
       setLoading(false);
     }
   }
@@ -1032,11 +1082,22 @@ export default function HomePage() {
                         <BrandMark />
                       </AvatarFallback>
                     </Avatar>
-                    <div className="typing-indicator" aria-hidden="true">
-                      <span />
-                      <span />
-                      <span />
-                    </div>
+                    {streamingReply ? (
+                      <div className="message-content">
+                        <span className="message-time">
+                          CHEETAH ASSISTANT · TYPING
+                        </span>
+                        <Card className="assistant-bubble">
+                          <MarkdownMessage content={streamingReply} />
+                        </Card>
+                      </div>
+                    ) : (
+                      <div className="typing-indicator" aria-hidden="true">
+                        <span />
+                        <span />
+                        <span />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
