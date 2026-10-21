@@ -576,7 +576,6 @@ export default function HomePage() {
         {currentUser?.role === "ADMIN" && (
           <div className="sidebar-label">WORKSPACE</div>
         )}
-        ;
         <nav className="workspace-nav" aria-label="Workspace">
           <Link
             className="nav-item selected"
