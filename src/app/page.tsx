@@ -669,9 +669,7 @@ export default function HomePage() {
               {currentUser ? (
                 <>
                   <div className="profile-avatar small">
-                    {currentUser.name
-                      ? currentUser.name[0].toUpperCase()
-                      : currentUser.email[0].toUpperCase()}
+                    <UserRound aria-hidden="true" />
                   </div>
                   <div className="topbar-profile-copy signed-in">
                     <strong>{currentUser.name ?? currentUser.email}</strong>
@@ -695,7 +693,9 @@ export default function HomePage() {
                 </>
               ) : (
                 <>
-                  <div className="profile-avatar small">C</div>
+                  <div className="profile-avatar small">
+                    <UserRound aria-hidden="true" />
+                  </div>
                   <div className="topbar-profile-copy">
                     <strong>Guest</strong>
                     <span>
@@ -961,7 +961,9 @@ export default function HomePage() {
                       </Card>
                     </div>
                     {message.role === "user" && (
-                      <div className="user-avatar">C</div>
+                      <div className="user-avatar">
+                        <UserRound aria-hidden="true" />
+                      </div>
                     )}
                   </div>
                 ))}

@@ -344,6 +344,11 @@ a {
   font-size: 12px;
   flex-shrink: 0;
 }
+.profile-avatar svg,
+.user-avatar svg {
+  height: 16px;
+  width: 16px;
+}
 .profile > div:nth-child(2) {
   display: flex;
   flex-direction: column;
@@ -599,6 +604,10 @@ button.profile-menu,
   font-size: 10px;
   background: #e4efe7;
   color: #28694c;
+}
+.profile-avatar.small svg {
+  height: 14px;
+  width: 14px;
 }
 .secure-label {
   font-size: 10px;
@@ -2178,6 +2187,18 @@ h1 span {
 .admin-agent-avatar [data-slot="avatar-fallback"],
 .admin-customer-avatar [data-slot="avatar-fallback"] {
   background: transparent;
+}
+.admin-agent-avatar .brand-mark {
+  height: 22px;
+  width: 22px;
+}
+.admin-customer-avatar svg {
+  height: 18px;
+  width: 18px;
+}
+.admin-customer-avatar.large svg {
+  height: 20px;
+  width: 20px;
 }
 .admin-agent > span:nth-child(3) {
   display: flex;

@@ -57,18 +57,6 @@ function formatTime(value: string) {
   return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-function initials(title: string) {
-  return (
-    title
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0])
-      .join("")
-      .toUpperCase() || "C"
-  );
-}
-
 export default function AdminPage() {
   const {
     data: conversations = [],
@@ -229,7 +217,9 @@ export default function AdminPage() {
           </div>
           <div className="admin-agent">
             <Avatar className="admin-agent-avatar">
-              <AvatarFallback className="bg-transparent">S</AvatarFallback>
+              <AvatarFallback className="bg-transparent">
+                <BrandMark />
+              </AvatarFallback>
             </Avatar>
             <div className="admin-notification-wrap">
               <Button
@@ -424,7 +414,7 @@ export default function AdminPage() {
                       >
                         <Avatar className="admin-customer-avatar">
                           <AvatarFallback className="bg-transparent">
-                            {initials(conversation.title)}
+                            <UserRound aria-hidden="true" />
                           </AvatarFallback>
                         </Avatar>
                         <span className="admin-conversation-copy">
@@ -492,7 +482,7 @@ export default function AdminPage() {
                     <div className="admin-detail-person">
                       <Avatar className="admin-customer-avatar large">
                         <AvatarFallback className="bg-transparent">
-                          {initials(selected.title)}
+                          <UserRound aria-hidden="true" />
                         </AvatarFallback>
                       </Avatar>
                       <span>
