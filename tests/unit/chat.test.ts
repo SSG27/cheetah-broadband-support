@@ -1,4 +1,3 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { prisma } from "../../src/lib/prisma";
 import { fallbackSupport } from "../../src/lib/fallback-support";
 import { sendMessage } from "../../src/lib/chat-service";
@@ -30,6 +29,9 @@ describe("ChatService", () => {
     const result = await sendMessage(conversation.id, "My Wi-Fi is slow");
 
     expect(result.userMessage.content).toBe("My Wi-Fi is slow");
+    if (!result.assistantMessage) {
+      throw new Error("Expected an assistant response");
+    }
     expect(result.assistantMessage.role).toBe("assistant");
     expect(result.source).toBe("fallback");
 

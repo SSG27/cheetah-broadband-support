@@ -33,6 +33,31 @@ Developer walkthrough on 13 October 2026 using the local app:
 
 The network status panel is sample demonstration data. Account lookup, service diagnostics, and handoff are not connected to real provider systems.
 
-## Later testing work
+## Automated test suites
 
-Jest unit tests, Playwright end-to-end tests, and an 80% coverage target are intentionally deferred. The real provider connectivity check should be run in an environment with an approved OpenAI key before a live AI demonstration.
+The repository includes Jest unit tests, Node integration tests, and Playwright end-to-end tests. CI runs the unit and integration suites, linting, formatting checks, and a production build. Playwright is configured for local runs but is not part of the CI workflow.
+
+### Jest unit tests and coverage
+
+Run:
+
+```sh
+pnpm test:unit
+```
+
+The suite exercises the server libraries and API route handlers, including validation, authorization, persistence failures, local fallback responses, and streamed AI behavior. Jest enforces a minimum of 80% for statements, branches, functions, and lines across `src/lib` and `src/app/api`. It writes an LCOV report to `coverage/lcov.info`.
+
+Last run: 21 October 2026. All 74 tests passed; coverage was 98.94% statements, 88.61% branches, 100% functions, and 99.55% lines.
+
+React pages and components are not included in Jest's coverage collection. The configured Playwright scenarios exercise customer message sending, fallback support responses, and starting a new conversation:
+
+```sh
+pnpm exec playwright install chromium
+pnpm exec playwright test
+```
+
+The browser tests expect local support mode, so run them without a configured `OPENAI_API_KEY`.
+
+### Follow-up testing work
+
+A project-wide coverage target for the React UI and further accessibility-focused visual tests remain future work. The real provider connectivity check should be run in an environment with an approved OpenAI key before an AI-backed demonstration.
