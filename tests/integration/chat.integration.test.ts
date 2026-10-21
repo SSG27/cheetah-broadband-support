@@ -28,6 +28,7 @@ test("chat service persists a customer and support reply through Prisma", async 
   const result = await sendMessage(conversation.id, "My Wi-Fi is slow");
 
   assert.equal(result.userMessage.content, "My Wi-Fi is slow");
+  assert.ok(result.assistantMessage);
   assert.equal(result.assistantMessage.role, "assistant");
   assert.match(result.assistantMessage.content, /speed|router|Wi-Fi/i);
   assert.equal(result.source, "fallback");

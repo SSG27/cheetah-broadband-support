@@ -35,7 +35,7 @@ Run `pnpm db:generate`, `pnpm db:push`, and `pnpm test:integration` after settin
 
 ## Deferred work
 
-Jest unit tests, Playwright end-to-end tests, 80% coverage target, Prettier configuration, and accessibility-focused visual refinements are intentionally not included yet.
+Jest enforces 80% coverage thresholds across server libraries and API routes. A project-wide coverage target for UI pages and components, plus further accessibility-focused visual refinements, remain future work. See [`docs/testing.md`](docs/testing.md) for test commands and current coverage.
 
 ## Academic integrity
 
